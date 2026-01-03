@@ -1,0 +1,526 @@
+{"token": "from", "hits": {"0": [1, 2], "1": [1, 2, 4, 5, 8, 9, 10, 373, 402], "2": [1, 2, 3, 49]}}
+{"token": "pyqt6", "hits": {"0": [1], "1": [4, 5], "2": [1]}}
+{"token": "qtwidgets", "hits": {"0": [1], "1": [5]}}
+{"token": "import", "hits": {"0": [1, 2], "1": [1, 2, 4, 5, 8, 9, 10], "2": [1, 2, 3]}}
+{"token": "qapplication", "hits": {"0": [1, 4, 6]}}
+{"token": "ui", "hits": {"0": [2], "1": [10, 12, 59, 60, 65, 91, 270, 312, 319, 327, 406, 421], "2": [6, 58, 64]}}
+{"token": "main_window", "hits": {"0": [2, 7]}}
+{"token": "create", "hits": {"0": [4], "1": [72, 319]}}
+{"token": "show", "hits": {"0": [4, 9], "1": [60, 314, 471, 492]}}
+{"token": "mainwindow", "hits": {"0": [4, 7], "1": [16]}}
+{"token": "exec", "hits": {"0": [4, 10], "1": [285, 349, 377]}}
+{"token": "def", "hits": {"0": [5], "1": [17, 73, 153, 269, 281, 300, 340, 372, 401, 405, 416, 448, 473], "2": [17, 41]}}
+{"token": "main", "hits": {"0": [5, 13], "1": [327]}}
+{"token": "none", "hits": {"0": [5], "1": [25, 26, 28, 31, 32, 63, 73, 153, 269, 281, 291, 292, 294, 300, 340, 342, 372, 401, 405, 416, 443, 448, 450, 473], "2": [22, 23, 41]}}
+{"token": "app", "hits": {"0": [6, 10], "1": [154]}}
+{"token": "window", "hits": {"0": [7, 9]}}
+{"token": "if", "hits": {"0": [12], "1": [24, 287, 288, 302, 342, 351, 353, 354, 379, 380, 392, 394, 450, 454, 461, 476, 481, 488]}}
+{"token": "__name__", "hits": {"0": [12]}}
+{"token": "__main__", "hits": {"0": [12]}}
+{"token": "datetime", "hits": {"1": [1, 438]}}
+{"token": "pathlib", "hits": {"1": [2]}}
+{"token": "path", "hits": {"1": [2, 29, 354, 355, 467, 497]}}
+{"token": "qtcore", "hits": {"1": [4], "2": [1]}}
+{"token": "qt", "hits": {"1": [4, 116]}}
+{"token": "qthread", "hits": {"1": [4, 25, 320], "2": [6]}}
+{"token": "qmainwindow", "hits": {"1": [5, 16]}}
+{"token": "qlabel", "hits": {"1": [5, 75, 118, 164, 169]}}
+{"token": "qlineedit", "hits": {"1": [5, 76, 77, 179, 187]}}
+{"token": "qpushbutton", "hits": {"1": [5, 80, 81, 82, 83, 84, 192, 200, 205, 209, 216, 220]}}
+{"token": "qprogressbar", "hits": {"1": [5, 87, 253, 262]}}
+{"token": "qlistwidget", "hits": {"1": [5, 88, 225, 232, 237]}}
+{"token": "qplaintextedit", "hits": {"1": [5, 89, 243]}}
+{"token": "qvboxlayout", "hits": {"1": [6, 111]}}
+{"token": "qhboxlayout", "hits": {"1": [6, 113, 114, 115]}}
+{"token": "qwidget", "hits": {"1": [6, 112, 157]}}
+{"token": "qsplitter", "hits": {"1": [6, 116]}}
+{"token": "qfiledialog", "hits": {"1": [6, 283, 284, 346, 347, 374, 375]}}
+{"token": "core", "hits": {"1": [8, 9], "2": [2, 3]}}
+{"token": "query", "hits": {"1": [8, 449, 455, 458]}}
+{"token": "persist", "hits": {"1": [8, 59, 60, 361, 381, 393]}}
+{"token": "models", "hits": {"1": [9], "2": [3]}}
+{"token": "filerecord", "hits": {"1": [9, 31, 416], "2": [3, 45]}}
+{"token": "hit", "hits": {"1": [9, 30, 32, 416]}}
+{"token": "searchresult", "hits": {"1": [9, 65, 66, 470]}}
+{"token": "worker", "hits": {"1": [10, 24, 26, 268, 319, 321, 323, 324, 325, 327, 328, 329, 330, 333, 334, 335, 402, 406, 417], "2": [5, 33]}}
+{"token": "indexworker", "hits": {"1": [10, 26, 321], "2": [7]}}
+{"token": "file", "hits": {"1": [12, 20, 49], "2": [43]}}
+{"token": "extensions", "hits": {"1": [12, 13, 48, 49, 321, 359, 440], "2": [19, 27, 46]}}
+{"token": "the", "hits": {"1": [12, 23, 24, 35, 37, 38, 43, 45, 47, 49, 51, 60, 61, 168, 215, 282, 289, 319, 323, 327, 332, 341, 357, 383, 398, 402, 406, 432, 435, 449, 470, 471, 485, 492], "2": [6, 14, 36, 37, 49, 58, 60, 64]}}
+{"token": "allows", "hits": {"1": [12]}}
+{"token": "user", "hits": {"1": [12, 38, 282, 406]}}
+{"token": "to", "hits": {"1": [12, 23, 37, 38, 51, 59, 65, 282, 341, 343, 348, 357, 370, 376, 421, 435, 485], "2": [8, 58, 64]}}
+{"token": "index", "hits": {"1": [12, 28, 30, 32, 35, 37, 43, 45, 51, 61, 81, 82, 83, 95, 282, 289, 292, 341, 342, 343, 357, 363, 370, 373, 376, 381, 383, 385, 395, 398, 416, 417, 419, 432, 434, 435, 449, 450, 451, 458], "2": [14, 37, 38, 49, 51, 65]}}
+{"token": "search", "hits": {"1": [12, 20, 38, 51, 84, 93, 95, 277, 417]}}
+{"token": "txt", "hits": {"1": [13, 49]}}
+{"token": "log", "hits": {"1": [13]}}
+{"token": "py", "hits": {"1": [13, 49]}}
+{"token": "md", "hits": {"1": [13]}}
+{"token": "class", "hits": {"1": [16], "2": [7]}}
+{"token": "__init__", "hits": {"1": [17, 18], "2": [17, 24]}}
+{"token": "self", "hits": {"1": [17, 20, 21, 25, 26, 31, 32, 63, 66, 68, 69, 70, 73, 75, 76, 77, 80, 81, 82, 83, 84, 87, 88, 89, 92, 93, 96, 97, 100, 101, 102, 104, 107, 108, 119, 120, 122, 123, 124, 125, 126, 128, 129, 131, 132, 151, 153, 155, 269, 271, 272, 273, 274, 275, 278, 279, 281, 290, 291, 292, 293, 294, 295, 296, 297, 298, 300, 302, 303, 307, 308, 309, 310, 313, 314, 315, 316, 317, 320, 321, 324, 325, 328, 329, 330, 333, 334, 335, 336, 338, 340, 342, 343, 358, 359, 362, 363, 365, 368, 370, 372, 384, 385, 386, 388, 389, 390, 395, 397, 401, 403, 405, 407, 409, 410, 411, 413, 414, 416, 418, 419, 422, 423, 424, 426, 427, 428, 429, 431, 432, 436, 439, 448, 450, 451, 454, 455, 458, 459, 461, 462, 465, 466, 467, 473, 474, 477, 478, 482, 485, 486, 488, 489, 493, 494, 495, 497], "2": [17, 26, 27, 28, 29, 30, 41, 44, 46, 50, 53, 54, 55, 59, 65]}}
+{"token": "super", "hits": {"1": [18], "2": [24]}}
+{"token": "setwindowtitle", "hits": {"1": [20, 348, 376]}}
+{"token": "engine", "hits": {"1": [20]}}
+{"token": "resize", "hits": {"1": [21]}}
+{"token": "900", "hits": {"1": [21, 158, 210, 238]}}
+{"token": "650", "hits": {"1": [21]}}
+{"token": "keep", "hits": {"1": [23]}}
+{"token": "references", "hits": {"1": [23]}}
+{"token": "avoid", "hits": {"1": [23]}}
+{"token": "garbage", "hits": {"1": [23]}}
+{"token": "collection", "hits": {"1": [23]}}
+{"token": "while", "hits": {"1": [23, 99, 306, 315]}}
+{"token": "background", "hits": {"1": [23, 158, 170, 180, 184, 193, 201, 206, 210, 217, 221, 226, 238, 244, 254, 263, 301, 315, 323, 402], "2": [5, 33]}}
+{"token": "thread", "hits": {"1": [23, 24, 25, 301, 319, 320, 323, 324, 325, 327, 332, 333, 334, 335, 336, 338], "2": [33, 64]}}
+{"token": "is", "hits": {"1": [23, 37, 306, 342, 355, 435, 450], "2": [58]}}
+{"token": "running", "hits": {"1": [23, 306]}}
+{"token": "python", "hits": {"1": [24]}}
+{"token": "gc", "hits": {"1": [24]}}
+{"token": "collects", "hits": {"1": [24]}}
+{"token": "these", "hits": {"1": [24, 357]}}
+{"token": "may", "hits": {"1": [24, 395]}}
+{"token": "stop", "hits": {"1": [24, 332], "2": [39]}}
+{"token": "unexpectedly", "hits": {"1": [24]}}
+{"token": "data", "hits": {"1": [28]}}
+{"token": "produced", "hits": {"1": [28], "2": [14]}}
+{"token": "by", "hits": {"1": [28, 106]}}
+{"token": "indexing", "hits": {"1": [28, 99, 301, 306], "2": [5, 8, 11, 37, 50, 60]}}
+{"token": "until", "hits": {"1": [28]}}
+{"token": "build", "hits": {"1": [28, 51, 81, 434, 451], "2": [37, 49]}}
+{"token": "finishes", "hits": {"1": [28]}}
+{"token": "successfully", "hits": {"1": [28, 417]}}
+{"token": "files", "hits": {"1": [29, 31, 291, 341, 342, 362, 381, 384, 393, 398, 416, 418, 432, 450, 458], "2": [14, 38, 49, 60]}}
+{"token": "list", "hits": {"1": [29, 30, 31, 32, 48, 65, 66, 142, 224, 416], "2": [15, 19, 45]}}
+{"token": "of", "hits": {"1": [29, 43, 45]}}
+{"token": "scanned", "hits": {"1": [29, 398, 432], "2": [49]}}
+{"token": "with", "hits": {"1": [29, 383, 435], "2": [6, 14]}}
+{"token": "metadata", "hits": {"1": [29, 35]}}
+{"token": "size", "hits": {"1": [29, 160, 249]}}
+{"token": "mtime", "hits": {"1": [29]}}
+{"token": "type", "hits": {"1": [29]}}
+{"token": "inverted", "hits": {"1": [30], "2": [37, 49]}}
+{"token": "token", "hits": {"1": [30]}}
+{"token": "dict", "hits": {"1": [32, 50, 63, 416], "2": [15]}}
+{"token": "str", "hits": {"1": [32, 42, 44, 46, 48, 54, 401, 405, 416], "2": [9, 12, 18, 19, 22]}}
+{"token": "describing", "hits": {"1": [35]}}
+{"token": "currently", "hits": {"1": [35]}}
+{"token": "loaded", "hits": {"1": [35, 383, 435]}}
+{"token": "built", "hits": {"1": [35]}}
+{"token": "this", "hits": {"1": [37, 59, 60, 355, 434, 435]}}
+{"token": "dictionary", "hits": {"1": [37]}}
+{"token": "meant", "hits": {"1": [37]}}
+{"token": "be", "hits": {"1": [37, 61, 395]}}
+{"token": "saved", "hits": {"1": [37, 435]}}
+{"token": "alongside", "hits": {"1": [37]}}
+{"token": "so", "hits": {"1": [37, 43, 60, 406]}}
+{"token": "that", "hits": {"1": [37, 47, 434]}}
+{"token": "it", "hits": {"1": [37], "2": [6]}}
+{"token": "can", "hits": {"1": [37, 43, 60, 406]}}
+{"token": "validated", "hits": {"1": [38]}}
+{"token": "displayed", "hits": {"1": [38, 65]}}
+{"token": "and", "hits": {"1": [38, 61, 72, 268, 332, 373, 392, 398, 417, 432, 435, 449], "2": [5, 6, 14, 36, 37, 39]}}
+{"token": "used", "hits": {"1": [38, 51, 65, 106]}}
+{"token": "reproduce", "hits": {"1": [38, 357]}}
+{"token": "same", "hits": {"1": [38, 485]}}
+{"token": "behavior", "hits": {"1": [39]}}
+{"token": "after", "hits": {"1": [39, 95]}}
+{"token": "loading", "hits": {"1": [39]}}
+{"token": "typical", "hits": {"1": [41]}}
+{"token": "keys", "hits": {"1": [41, 398, 432]}}
+{"token": "your", "hits": {"1": [41]}}
+{"token": "current", "hits": {"1": [41, 341, 383]}}
+{"token": "format", "hits": {"1": [41, 43]}}
+{"token": "index_format_version", "hits": {"1": [42, 437]}}
+{"token": "version", "hits": {"1": [43]}}
+{"token": "on", "hits": {"1": [43, 327], "2": [14, 38, 39]}}
+{"token": "disk", "hits": {"1": [43, 341, 373]}}
+{"token": "you", "hits": {"1": [43]}}
+{"token": "change", "hits": {"1": [43]}}
+{"token": "schema", "hits": {"1": [43]}}
+{"token": "later", "hits": {"1": [43, 357]}}
+{"token": "created_at", "hits": {"1": [44, 438]}}
+{"token": "iso", "hits": {"1": [45]}}
+{"token": "timestamp", "hits": {"1": [45]}}
+{"token": "when", "hits": {"1": [45, 61, 332], "2": [11]}}
+{"token": "was", "hits": {"1": [45, 47, 434], "2": [60]}}
+{"token": "created", "hits": {"1": [45, 434]}}
+{"token": "indexed_root_dir", "hits": {"1": [46, 439]}}
+{"token": "folder", "hits": {"1": [47, 118, 282, 289, 303, 348, 376]}}
+{"token": "indexed", "hits": {"1": [47]}}
+{"token": "root", "hits": {"1": [47]}}
+{"token": "directory", "hits": {"1": [47, 284, 347, 355, 375]}}
+{"token": "which", "hits": {"1": [49]}}
+{"token": "were", "hits": {"1": [49]}}
+{"token": "included", "hits": {"1": [49]}}
+{"token": "in", "hits": {"1": [49, 301, 323, 383, 449, 466, 471, 485, 494], "2": [6]}}
+{"token": "scan", "hits": {"1": [49, 282], "2": [36, 43]}}
+{"token": "tokenizer_config", "hits": {"1": [50, 358, 441]}}
+{"token": "tokenization", "hits": {"1": [51]}}
+{"token": "rules", "hits": {"1": [51]}}
+{"token": "min_length", "hits": {"1": [53, 442], "2": [21, 28, 53]}}
+{"token": "int", "hits": {"1": [53], "2": [21]}}
+{"token": "stopwords_mode", "hits": {"1": [54, 443]}}
+{"token": "keep_numbers", "hits": {"1": [55, 444], "2": [23, 30, 55]}}
+{"token": "bool", "hits": {"1": [55], "2": [23]}}
+{"token": "note", "hits": {"1": [58]}}
+{"token": "uses", "hits": {"1": [59]}}
+{"token": "pass", "hits": {"1": [59]}}
+{"token": "correct", "hits": {"1": [59]}}
+{"token": "config", "hits": {"1": [59]}}
+{"token": "into", "hits": {"1": [59]}}
+{"token": "save_index", "hits": {"1": [59, 361]}}
+{"token": "load_index", "hits": {"1": [60, 381]}}
+{"token": "returns", "hits": {"1": [60]}}
+{"token": "meta", "hits": {"1": [60, 341, 365, 381, 386, 434]}}
+{"token": "details", "hits": {"1": [60]}}
+{"token": "warn", "hits": {"1": [61, 392]}}
+{"token": "might", "hits": {"1": [61]}}
+{"token": "outdated", "hits": {"1": [61, 392, 395]}}
+{"token": "index_meta", "hits": {"1": [63, 294, 358, 359, 365, 386, 436]}}
+{"token": "last", "hits": {"1": [65]}}
+{"token": "results", "hits": {"1": [65, 142, 289, 449, 462, 465], "2": [64]}}
+{"token": "map", "hits": {"1": [65]}}
+{"token": "selected", "hits": {"1": [65, 237, 470, 492]}}
+{"token": "row", "hits": {"1": [65, 486, 488, 494, 497]}}
+{"token": "last_results", "hits": {"1": [66, 293, 458, 461, 466, 485, 488, 494, 497]}}
+{"token": "_build_ui", "hits": {"1": [68, 73]}}
+{"token": "_apply_style", "hits": {"1": [69, 153]}}
+{"token": "_connect_signals", "hits": {"1": [70, 269]}}
+{"token": "widgets", "hits": {"1": [72, 86]}}
+{"token": "layouts", "hits": {"1": [72]}}
+{"token": "clean", "hits": {"1": [72, 332]}}
+{"token": "layout", "hits": {"1": [72, 110]}}
+{"token": "status", "hits": {"1": [74, 168, 328, 402], "2": [9, 36, 37, 44, 50]}}
+{"token": "inputs", "hits": {"1": [74, 178]}}
+{"token": "status_label", "hits": {"1": [75, 107, 126, 303, 317, 343, 368, 370, 395, 397, 403, 407, 432, 451, 455, 462, 465, 477, 482, 489, 497]}}
+{"token": "ready", "hits": {"1": [75, 421]}}
+{"token": "path_edit", "hits": {"1": [76, 92, 119, 290, 302, 321, 439]}}
+{"token": "query_edit", "hits": {"1": [77, 93, 128, 279, 454, 458]}}
+{"token": "actions", "hits": {"1": [79, 270]}}
+{"token": "browse_btn", "hits": {"1": [80, 120, 271, 307, 413, 426]}}
+{"token": "browse", "hits": {"1": [80]}}
+{"token": "build_btn", "hits": {"1": [81, 122, 272, 308, 414, 427]}}
+{"token": "save_btn", "hits": {"1": [82, 96, 123, 273, 298, 309, 389, 428]}}
+{"token": "save", "hits": {"1": [82, 95, 341, 343, 348, 368, 370, 417]}}
+{"token": "load_btn", "hits": {"1": [83, 124, 274]}}
+{"token": "load", "hits": {"1": [83, 373]}}
+{"token": "search_btn", "hits": {"1": [84, 97, 108, 129, 275, 297, 310, 388, 429]}}
+{"token": "output", "hits": {"1": [86, 312]}}
+{"token": "progress", "hits": {"1": [87, 99, 100, 101, 102, 125, 252, 314, 315, 316, 409, 410, 411, 422, 423, 424], "2": [8]}}
+{"token": "results_list", "hits": {"1": [88, 131, 278, 295, 459, 467, 474, 486]}}
+{"token": "snippets_box", "hits": {"1": [89, 104, 132, 296, 313, 390, 431, 478, 493, 495]}}
+{"token": "defaults", "hits": {"1": [91]}}
+{"token": "setreadonly", "hits": {"1": [92, 104]}}
+{"token": "true", "hits": {"1": [92, 104, 388, 389, 413, 414, 426, 427, 428, 429, 444], "2": [23]}}
+{"token": "setplaceholdertext", "hits": {"1": [93]}}
+{"token": "only", "hits": {"1": [95, 99], "2": [5]}}
+{"token": "become", "hits": {"1": [95]}}
+{"token": "available", "hits": {"1": [95]}}
+{"token": "exists", "hits": {"1": [95]}}
+{"token": "setenabled", "hits": {"1": [96, 97, 297, 298, 307, 308, 309, 310, 388, 389, 413, 414, 426, 427, 428, 429]}}
+{"token": "false", "hits": {"1": [96, 97, 141, 297, 298, 307, 308, 309, 310]}}
+{"token": "bar", "hits": {"1": [99, 252]}}
+{"token": "starts", "hits": {"1": [99]}}
+{"token": "hidden", "hits": {"1": [99]}}
+{"token": "shown", "hits": {"1": [99]}}
+{"token": "setrange", "hits": {"1": [100, 315, 409, 422]}}
+{"token": "100", "hits": {"1": [100, 101, 409, 410, 422, 423]}}
+{"token": "setvalue", "hits": {"1": [101, 410, 423]}}
+{"token": "hide", "hits": {"1": [102, 411, 424]}}
+{"token": "object", "hits": {"1": [106]}}
+{"token": "names", "hits": {"1": [106]}}
+{"token": "stylesheet", "hits": {"1": [106, 154]}}
+{"token": "selectors", "hits": {"1": [106]}}
+{"token": "setobjectname", "hits": {"1": [107, 108]}}
+{"token": "statuslabel", "hits": {"1": [107, 169]}}
+{"token": "searchbutton", "hits": {"1": [108, 216, 220]}}
+{"token": "building", "hits": {"1": [110]}}
+{"token": "main_layout", "hits": {"1": [111, 134, 135, 145, 146, 147, 148, 149]}}
+{"token": "main_widget", "hits": {"1": [112, 149, 151]}}
+{"token": "folder_layout", "hits": {"1": [113, 118, 119, 120, 137, 145]}}
+{"token": "build_layout", "hits": {"1": [114, 122, 123, 124, 125, 126, 138, 146]}}
+{"token": "search_layout", "hits": {"1": [115, 128, 129, 139, 147]}}
+{"token": "splitter", "hits": {"1": [116, 131, 132, 141, 142, 143, 148]}}
+{"token": "orientation", "hits": {"1": [116]}}
+{"token": "vertical", "hits": {"1": [116]}}
+{"token": "addwidget", "hits": {"1": [118, 119, 120, 122, 123, 124, 125, 126, 128, 129, 131, 132, 148]}}
+{"token": "setcontentsmargins", "hits": {"1": [134]}}
+{"token": "14", "hits": {"1": [134]}}
+{"token": "setspacing", "hits": {"1": [135, 137, 138, 139]}}
+{"token": "10", "hits": {"1": [135]}}
+{"token": "setchildrencollapsible", "hits": {"1": [141]}}
+{"token": "setstretchfactor", "hits": {"1": [142, 143]}}
+{"token": "snippets", "hits": {"1": [143, 242, 471, 492, 494]}}
+{"token": "box", "hits": {"1": [143, 242, 471]}}
+{"token": "addlayout", "hits": {"1": [145, 146, 147]}}
+{"token": "setlayout", "hits": {"1": [149]}}
+{"token": "setcentralwidget", "hits": {"1": [151]}}
+{"token": "wide", "hits": {"1": [154]}}
+{"token": "dark", "hits": {"1": [154]}}
+{"token": "theme", "hits": {"1": [154]}}
+{"token": "rounded", "hits": {"1": [154]}}
+{"token": "controls", "hits": {"1": [154, 306]}}
+{"token": "setstylesheet", "hits": {"1": [155]}}
+{"token": "base", "hits": {"1": [156]}}
+{"token": "0f172a", "hits": {"1": [158]}}
+{"token": "slate", "hits": {"1": [158, 159, 193, 194, 212]}}
+{"token": "color", "hits": {"1": [159, 165, 175, 184, 212, 239]}}
+{"token": "e2e8f0", "hits": {"1": [159, 165, 239]}}
+{"token": "200", "hits": {"1": [159]}}
+{"token": "font", "hits": {"1": [160, 174, 197, 248, 249]}}
+{"token": "13px", "hits": {"1": [160]}}
+{"token": "labels", "hits": {"1": [163]}}
+{"token": "make", "hits": {"1": [168, 215]}}
+{"token": "label", "hits": {"1": [168]}}
+{"token": "look", "hits": {"1": [168]}}
+{"token": "like", "hits": {"1": [168]}}
+{"token": "pill", "hits": {"1": [168]}}
+{"token": "111c33", "hits": {"1": [170]}}
+{"token": "border", "hits": {"1": [171, 172, 181, 182, 188, 194, 195, 202, 211, 218, 227, 228, 234, 245, 246, 255, 256, 264]}}
+{"token": "1px", "hits": {"1": [171, 181, 188, 194, 202, 211, 218, 227, 245, 255]}}
+{"token": "solid", "hits": {"1": [171, 181, 188, 194, 202, 211, 218, 227, 245, 255]}}
+{"token": "24324d", "hits": {"1": [171]}}
+{"token": "radius", "hits": {"1": [172, 182, 195, 228, 234, 246, 256, 264]}}
+{"token": "10px", "hits": {"1": [172, 173, 182, 183, 195, 233, 234, 247, 256]}}
+{"token": "padding", "hits": {"1": [173, 183, 196, 229, 233, 247, 258]}}
+{"token": "6px", "hits": {"1": [173, 229]}}
+{"token": "weight", "hits": {"1": [174, 197]}}
+{"token": "600", "hits": {"1": [174, 184, 197, 217]}}
+{"token": "cbd5e1", "hits": {"1": [175]}}
+{"token": "0b1222", "hits": {"1": [180, 206, 226, 244, 254]}}
+{"token": "26324a", "hits": {"1": [181, 227, 245, 255]}}
+{"token": "8px", "hits": {"1": [183, 196, 264]}}
+{"token": "selection", "hits": {"1": [184, 277, 489]}}
+{"token": "2563eb", "hits": {"1": [184, 217]}}
+{"token": "blue", "hits": {"1": [184, 188, 217, 221, 238]}}
+{"token": "focus", "hits": {"1": [187]}}
+{"token": "3b82f6", "hits": {"1": [188, 202, 218]}}
+{"token": "500", "hits": {"1": [188, 212, 263]}}
+{"token": "buttons", "hits": {"1": [191, 268]}}
+{"token": "1e293b", "hits": {"1": [193]}}
+{"token": "800", "hits": {"1": [193]}}
+{"token": "334155", "hits": {"1": [194]}}
+{"token": "700", "hits": {"1": [194, 221]}}
+{"token": "12px", "hits": {"1": [196, 228, 246, 249]}}
+{"token": "hover", "hits": {"1": [200, 220]}}
+{"token": "24324a", "hits": {"1": [201]}}
+{"token": "pressed", "hits": {"1": [205]}}
+{"token": "disabled", "hits": {"1": [209]}}
+{"token": "111827", "hits": {"1": [210]}}
+{"token": "gray", "hits": {"1": [210]}}
+{"token": "1f2937", "hits": {"1": [211]}}
+{"token": "64748b", "hits": {"1": [212]}}
+{"token": "primary", "hits": {"1": [215]}}
+{"token": "action", "hits": {"1": [215]}}
+{"token": "pop", "hits": {"1": [215]}}
+{"token": "bit", "hits": {"1": [215]}}
+{"token": "1d4ed8", "hits": {"1": [221]}}
+{"token": "item", "hits": {"1": [232, 237]}}
+{"token": "1e3a8a", "hits": {"1": [238]}}
+{"token": "ish", "hits": {"1": [238]}}
+{"token": "family", "hits": {"1": [248]}}
+{"token": "consolas", "hits": {"1": [248]}}
+{"token": "courier", "hits": {"1": [248]}}
+{"token": "new", "hits": {"1": [248, 289]}}
+{"token": "monospace", "hits": {"1": [248]}}
+{"token": "text", "hits": {"1": [257, 302, 321, 439, 454, 458, 471]}}
+{"token": "align", "hits": {"1": [257]}}
+{"token": "center", "hits": {"1": [257]}}
+{"token": "2px", "hits": {"1": [258]}}
+{"token": "height", "hits": {"1": [259]}}
+{"token": "18px", "hits": {"1": [259]}}
+{"token": "chunk", "hits": {"1": [262]}}
+{"token": "22c55e", "hits": {"1": [263]}}
+{"token": "green", "hits": {"1": [263]}}
+{"token": "connect", "hits": {"1": [268, 271, 272, 273, 274, 275, 278, 279, 325, 328, 329, 330, 333, 334, 335, 336]}}
+{"token": "signals", "hits": {"1": [268, 323], "2": [6]}}
+{"token": "clicked", "hits": {"1": [271, 272, 273, 274, 275]}}
+{"token": "on_browse_clicked", "hits": {"1": [271, 281]}}
+{"token": "on_build_index_clicked", "hits": {"1": [272, 300]}}
+{"token": "on_save_index_clicked", "hits": {"1": [273, 340]}}
+{"token": "on_load_index_clicked", "hits": {"1": [274, 372]}}
+{"token": "on_search_clicked", "hits": {"1": [275, 279, 448]}}
+{"token": "ux", "hits": {"1": [277]}}
+{"token": "itemselectionchanged", "hits": {"1": [278]}}
+{"token": "on_result_selected", "hits": {"1": [278, 473]}}
+{"token": "returnpressed", "hits": {"1": [279]}}
+{"token": "let", "hits": {"1": [282]}}
+{"token": "choose", "hits": {"1": [282]}}
+{"token": "explorer_dialog", "hits": {"1": [283, 284, 285, 288, 290, 346, 347, 348, 349, 353, 354, 364, 370, 374, 375, 376, 377, 380, 381]}}
+{"token": "setfilemode", "hits": {"1": [284, 347, 375]}}
+{"token": "filemode", "hits": {"1": [284, 347, 375]}}
+{"token": "dialog_success", "hits": {"1": [285, 287, 349, 351, 377, 379]}}
+{"token": "len", "hits": {"1": [288, 302, 353, 380, 398, 432, 461, 476, 481, 488]}}
+{"token": "selectedfiles", "hits": {"1": [288, 290, 353, 354, 364, 370, 380, 381]}}
+{"token": "choosing", "hits": {"1": [289]}}
+{"token": "invalidates", "hits": {"1": [289]}}
+{"token": "previous", "hits": {"1": [289]}}
+{"token": "settext", "hits": {"1": [290, 303, 317, 343, 368, 370, 395, 397, 403, 407, 432, 451, 455, 462, 465, 477, 482, 489, 497]}}
+{"token": "clear", "hits": {"1": [295, 296, 313, 390, 431, 459, 478, 493]}}
+{"token": "start", "hits": {"1": [301, 306, 338]}}
+{"token": "no", "hits": {"1": [303, 343, 462, 477]}}
+{"token": "return", "hits": {"1": [304, 344, 452, 456, 463, 479, 483, 490], "2": [62]}}
+{"token": "disable", "hits": {"1": [306]}}
+{"token": "prevents", "hits": {"1": [306]}}
+{"token": "re", "hits": {"1": [306]}}
+{"token": "entrance", "hits": {"1": [306]}}
+{"token": "double", "hits": {"1": [306]}}
+{"token": "reset", "hits": {"1": [312]}}
+{"token": "busy", "hits": {"1": [315]}}
+{"token": "indeterminate", "hits": {"1": [315]}}
+{"token": "mode", "hits": {"1": [315]}}
+{"token": "work", "hits": {"1": [315, 332], "2": [5]}}
+{"token": "runs", "hits": {"1": [315], "2": [6]}}
+{"token": "setformat", "hits": {"1": [316]}}
+{"token": "working", "hits": {"1": [316]}}
+{"token": "starting", "hits": {"1": [317]}}
+{"token": "does", "hits": {"1": [319]}}
+{"token": "heavy", "hits": {"1": [319], "2": [5]}}
+{"token": "lifting", "hits": {"1": [319]}}
+{"token": "stays", "hits": {"1": [319]}}
+{"token": "responsive", "hits": {"1": [319]}}
+{"token": "run", "hits": {"1": [323, 325], "2": [41]}}
+{"token": "communicate", "hits": {"1": [323]}}
+{"token": "back", "hits": {"1": [323], "2": [64]}}
+{"token": "via", "hits": {"1": [323], "2": [6]}}
+{"token": "movetothread", "hits": {"1": [324]}}
+{"token": "started", "hits": {"1": [325]}}
+{"token": "communication", "hits": {"1": [327]}}
+{"token": "always", "hits": {"1": [327, 332]}}
+{"token": "happens", "hits": {"1": [327]}}
+{"token": "on_index_status", "hits": {"1": [328, 401]}}
+{"token": "error", "hits": {"1": [329, 332, 334, 368], "2": [11, 12, 39, 59, 60]}}
+{"token": "on_index_error", "hits": {"1": [329, 405]}}
+{"token": "finished", "hits": {"1": [330, 333, 335, 336, 417], "2": [15, 38, 58, 65]}}
+{"token": "on_index_finished", "hits": {"1": [330, 416]}}
+{"token": "up", "hits": {"1": [332]}}
+{"token": "ends", "hits": {"1": [332]}}
+{"token": "success", "hits": {"1": [332], "2": [38]}}
+{"token": "or", "hits": {"1": [332, 342, 450, 488], "2": [11]}}
+{"token": "quit", "hits": {"1": [333, 334]}}
+{"token": "deletelater", "hits": {"1": [335, 336]}}
+{"token": "json", "hits": {"1": [341]}}
+{"token": "select", "hits": {"1": [348, 376]}}
+{"token": "try", "hits": {"1": [352, 406], "2": [42]}}
+{"token": "not", "hits": {"1": [354, 355, 394], "2": [25, 58]}}
+{"token": "is_dir", "hits": {"1": [354]}}
+{"token": "raise", "hits": {"1": [355]}}
+{"token": "notadirectoryerror", "hits": {"1": [355]}}
+{"token": "values", "hits": {"1": [357]}}
+{"token": "are", "hits": {"1": [357, 485]}}
+{"token": "needed", "hits": {"1": [357]}}
+{"token": "validate", "hits": {"1": [357, 392]}}
+{"token": "out_dir", "hits": {"1": [364]}}
+{"token": "except", "hits": {"1": [367], "2": [57]}}
+{"token": "exception", "hits": {"1": [367], "2": [39, 57]}}
+{"token": "as", "hits": {"1": [367], "2": [57]}}
+{"token": "failed", "hits": {"1": [368, 406]}}
+{"token": "else", "hits": {"1": [369, 396], "2": [63]}}
+{"token": "an", "hits": {"1": [373], "2": [11, 60]}}
+{"token": "enable", "hits": {"1": [373, 417]}}
+{"token": "searching", "hits": {"1": [373]}}
+{"token": "immediately", "hits": {"1": [373]}}
+{"token": "replace", "hits": {"1": [383]}}
+{"token": "memory", "hits": {"1": [383, 449]}}
+{"token": "one", "hits": {"1": [383, 482]}}
+{"token": "basic", "hits": {"1": [392]}}
+{"token": "safety", "hits": {"1": [392]}}
+{"token": "check", "hits": {"1": [392]}}
+{"token": "something", "hits": {"1": [392]}}
+{"token": "looks", "hits": {"1": [392]}}
+{"token": "is_valid", "hits": {"1": [393, 394]}}
+{"token": "problems", "hits": {"1": [393]}}
+{"token": "validate_index", "hits": {"1": [393]}}
+{"token": "system", "hits": {"1": [398, 432], "2": [43]}}
+{"token": "tokens", "hits": {"1": [398, 432]}}
+{"token": "message", "hits": {"1": [401, 403, 405, 407]}}
+{"token": "live", "hits": {"1": [402]}}
+{"token": "messages", "hits": {"1": [402]}}
+{"token": "restore", "hits": {"1": [406, 421]}}
+{"token": "again", "hits": {"1": [406]}}
+{"token": "store", "hits": {"1": [417]}}
+{"token": "state", "hits": {"1": [421]}}
+{"token": "describes", "hits": {"1": [434]}}
+{"token": "how", "hits": {"1": [434]}}
+{"token": "preserve", "hits": {"1": [435]}}
+{"token": "reproducibility", "hits": {"1": [435]}}
+{"token": "validation", "hits": {"1": [435]}}
+{"token": "now", "hits": {"1": [438]}}
+{"token": "isoformat", "hits": {"1": [438]}}
+{"token": "execute", "hits": {"1": [449]}}
+{"token": "against", "hits": {"1": [449]}}
+{"token": "display", "hits": {"1": [449]}}
+{"token": "ranked", "hits": {"1": [449]}}
+{"token": "first", "hits": {"1": [451]}}
+{"token": "enter", "hits": {"1": [455]}}
+{"token": "search_and", "hits": {"1": [458]}}
+{"token": "for", "hits": {"1": [466, 492, 494, 497], "2": [5]}}
+{"token": "result", "hits": {"1": [466, 467, 477, 482, 492, 497]}}
+{"token": "additem", "hits": {"1": [467]}}
+{"token": "total", "hits": {"1": [467]}}
+{"token": "matches", "hits": {"1": [467]}}
+{"token": "matches_count", "hits": {"1": [467]}}
+{"token": "read", "hits": {"1": [470]}}
+{"token": "event", "hits": {"1": [470]}}
+{"token": "get", "hits": {"1": [470]}}
+{"token": "corresponding", "hits": {"1": [470]}}
+{"token": "selected_items", "hits": {"1": [474, 476, 481]}}
+{"token": "selecteditems", "hits": {"1": [474]}}
+{"token": "chosen", "hits": {"1": [477, 482]}}
+{"token": "more", "hits": {"1": [482]}}
+{"token": "than", "hits": {"1": [482]}}
+{"token": "currentrow", "hits": {"1": [485, 486]}}
+{"token": "maps", "hits": {"1": [485]}}
+{"token": "directly", "hits": {"1": [485]}}
+{"token": "because", "hits": {"1": [485]}}
+{"token": "items", "hits": {"1": [485]}}
+{"token": "added", "hits": {"1": [485]}}
+{"token": "order", "hits": {"1": [485]}}
+{"token": "invalid", "hits": {"1": [489]}}
+{"token": "snippet", "hits": {"1": [494, 495]}}
+{"token": "appendplaintext", "hits": {"1": [495]}}
+{"token": "showing", "hits": {"1": [497]}}
+{"token": "pyqtsignal", "hits": {"2": [1, 9, 12, 15]}}
+{"token": "qobject", "hits": {"2": [1, 7]}}
+{"token": "indexer", "hits": {"2": [2, 45, 51]}}
+{"token": "responsible", "hits": {"2": [5]}}
+{"token": "cpu", "hits": {"2": [5]}}
+{"token": "communicates", "hits": {"2": [6]}}
+{"token": "exclusively", "hits": {"2": [6]}}
+{"token": "emitted", "hits": {"2": [8, 11, 14, 58]}}
+{"token": "report", "hits": {"2": [8]}}
+{"token": "stages", "hits": {"2": [8]}}
+{"token": "scanning", "hits": {"2": [8, 11, 36, 44, 60]}}
+{"token": "unrecoverable", "hits": {"2": [11]}}
+{"token": "occurs", "hits": {"2": [11]}}
+{"token": "during", "hits": {"2": [11, 25, 60]}}
+{"token": "once", "hits": {"2": [14]}}
+{"token": "successful", "hits": {"2": [14, 64]}}
+{"token": "completion", "hits": {"2": [14, 64]}}
+{"token": "root_dir", "hits": {"2": [18, 26, 46]}}
+{"token": "stopwords", "hits": {"2": [22, 29, 54]}}
+{"token": "set", "hits": {"2": [22, 27]}}
+{"token": "configuration", "hits": {"2": [25]}}
+{"token": "captured", "hits": {"2": [25]}}
+{"token": "at", "hits": {"2": [25]}}
+{"token": "creation", "hits": {"2": [25]}}
+{"token": "time", "hits": {"2": [25]}}
+{"token": "modified", "hits": {"2": [25]}}
+{"token": "execution", "hits": {"2": [25]}}
+{"token": "entry", "hits": {"2": [33]}}
+{"token": "point", "hits": {"2": [33]}}
+{"token": "executed", "hits": {"2": [33]}}
+{"token": "inside", "hits": {"2": [33]}}
+{"token": "flow", "hits": {"2": [35]}}
+{"token": "emit", "hits": {"2": [36, 37, 38, 39, 44, 50, 59, 65]}}
+{"token": "filesystem", "hits": {"2": [36]}}
+{"token": "any", "hits": {"2": [39, 58]}}
+{"token": "phase", "hits": {"2": [43, 49]}}
+{"token": "valid_files", "hits": {"2": [45, 52, 65]}}
+{"token": "scan_files", "hits": {"2": [45]}}
+{"token": "build_index", "hits": {"2": [51]}}
+{"token": "failure", "hits": {"2": [58]}}
+{"token": "reported", "hits": {"2": [58]}}
+{"token": "there", "hits": {"2": [60]}}
+{"token": "hand", "hits": {"2": [64]}}

@@ -1,0 +1,36 @@
+{
+    "index_format_version": "1",
+    "created_at": "2025-12-25T01:08:21.267648",
+    "indexed_root_dir": "C:/mini_google/ui",
+    "extensions": [
+        ".txt",
+        ".log",
+        ".py",
+        ".md"
+    ],
+    "tokenizer_config": {
+        "min_length": 2,
+        "stopwords_mode": "none",
+        "keep_numbers": true
+    },
+    "files": [
+        {
+            "path": "C:/mini_google/ui\\main.py",
+            "size": 286,
+            "mtime": 1766251267.3503642,
+            "filetype": "PY"
+        },
+        {
+            "path": "C:/mini_google/ui\\main_window.py",
+            "size": 19054,
+            "mtime": 1766615456.0967104,
+            "filetype": "PY"
+        },
+        {
+            "path": "C:/mini_google/ui\\worker.py",
+            "size": 2532,
+            "mtime": 1766608978.5970466,
+            "filetype": "PY"
+        }
+    ]
+}

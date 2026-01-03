@@ -1,0 +1,65 @@
+from PyQt6.QtCore import pyqtSignal, QObject
+from core import indexer
+from core.models import FileRecord
+
+# Background worker responsible only for I/O-heavy and CPU-heavy indexing work.
+# It runs in a QThread and communicates with the UI exclusively via signals.
+class IndexWorker(QObject):
+    # Emitted to report progress stages (e.g. "Scanning...", "Indexing...").
+    status = pyqtSignal(str)
+
+    # Emitted when an unrecoverable error occurs during scanning or indexing.
+    error = pyqtSignal(str)
+
+    # Emitted once on successful completion with the produced files and index.
+    finished = pyqtSignal(list, dict)
+
+    def __init__(self,
+                 root_dir: str,
+                 extensions: list[str],
+                 *,
+                 min_length: int = 2,
+                 stopwords: set[str] | None = None,
+                 keep_numbers: bool = True) -> None:
+        super().__init__()
+        # Configuration captured at creation time; not modified during execution.
+        self.root_dir = root_dir
+        self.extensions = set(extensions)
+        self.min_length = min_length
+        self.stopwords = stopwords
+        self.keep_numbers = keep_numbers
+
+    """
+       Worker entry point executed inside a background thread.
+
+       Flow:
+       1) Emit status("Scanning...") and scan the filesystem.
+       2) Emit status("Indexing...") and build the inverted index.
+       3) Emit finished(files, index) on success.
+       On any exception: emit error(...) and stop.
+    """
+    def run(self) -> None:
+        try:
+            # Phase 1: file system scan.
+            self.status.emit("Scanning...")
+            valid_files: list[FileRecord] = indexer.scan_files(
+                self.root_dir, self.extensions
+            )
+
+            # Phase 2: build the inverted index from scanned files.
+            self.status.emit("Indexing...")
+            index = indexer.build_index(
+                valid_files,
+                min_length=self.min_length,
+                stopwords=self.stopwords,
+                keep_numbers=self.keep_numbers
+            )
+        except Exception as e:
+            # Any failure is reported to the UI; finished() is not emitted.
+            self.error.emit(
+                f"There was an error during scanning/indexing the files: {e}"
+            )
+            return
+        else:
+            # Successful completion: hand results back to the UI thread.
+            self.finished.emit(valid_files, index)
