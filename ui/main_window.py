@@ -6,7 +6,7 @@ from pathlib import Path
 from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtWidgets import QMainWindow, QLabel, QLineEdit, QPushButton, QProgressBar, QListWidget, QPlainTextEdit, \
     QVBoxLayout, QHBoxLayout, QWidget, QSplitter, QFileDialog, QRadioButton, QTextEdit, QListWidgetItem, \
-    QAbstractItemView
+    QAbstractItemView, QSizePolicy
 from PyQt6.QtGui import QColor, QTextCursor, QTextCharFormat, QTextDocument, QPixmap, QIcon
 
 from core import query, persist
@@ -80,8 +80,6 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel("Ready")
         self.status_label.setObjectName("statusLabel")
 
-        # FIX: Correct QSizePolicy syntax for PyQt6
-        from PyQt6.QtWidgets import QSizePolicy
         self.status_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self.path_edit = QLineEdit()
@@ -232,6 +230,7 @@ class MainWindow(QMainWindow):
         self.save_btn.clicked.connect(self.on_save_index_clicked)
         self.load_btn.clicked.connect(self.on_load_index_clicked)
         self.search_btn.clicked.connect(self.on_search_clicked)
+        self.query_edit.returnPressed.connect(self.search_btn.click)
 
         # Selection/search UX
         self.results_list.itemSelectionChanged.connect(self.on_result_selected)
@@ -530,6 +529,14 @@ class MainWindow(QMainWindow):
         color.setHsv(hue, 180, 255)
         return color
 
+    @staticmethod
+    def _overlaps(start: int, end: int, occupied: list[tuple[int, int]]) -> bool:
+        for position in occupied:
+            if start < position[1] and end > position[0]:
+                return True
+
+        return False
+
     """
         Render snippets into the QPlainTextEdit and highlight each token
         (case-insensitive OR case-sensitive depending on your tokenizer/search rules).
@@ -560,6 +567,7 @@ class MainWindow(QMainWindow):
 
         flags = QTextDocument.FindFlag(0)
 
+        occupied: list[tuple[int, int]] = []
         for token in tokens:
             cursor = QTextCursor(doc)
             cursor.movePosition(QTextCursor.MoveOperation.Start)
@@ -572,6 +580,14 @@ class MainWindow(QMainWindow):
                 cursor = doc.find(token, cursor, flags)
                 if cursor.isNull():
                     break
+
+                start_position = cursor.selectionStart()
+                end_position = cursor.selectionEnd()
+
+                if self._overlaps(start_position, end_position, occupied):
+                    continue
+
+                occupied.append((start_position, end_position))
 
                 sel = QTextEdit.ExtraSelection()
                 sel.cursor = cursor
@@ -614,5 +630,6 @@ class MainWindow(QMainWindow):
 
             if not pathlib_path.is_file():
                 self.status_label.setText("The path you chose is not a file's path")
+                return
 
             self._open_file_with_default_app(path)
