@@ -1,4 +1,5 @@
 import hashlib
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -235,6 +236,8 @@ class MainWindow(QMainWindow):
         # Selection/search UX
         self.results_list.itemSelectionChanged.connect(self.on_result_selected)
         self.query_edit.returnPressed.connect(self.on_search_clicked)
+
+        self.results_list.itemDoubleClicked.connect(self.on_result_double_clicked)
 
     def on_browse_clicked(self) -> None:
         # Let user choose the folder to scan/index.
@@ -593,3 +596,23 @@ class MainWindow(QMainWindow):
             item.setIcon(QIcon(pixmap))
 
             self.legend_list.addItem(item)
+
+    @staticmethod
+    def _open_file_with_default_app(path: str) -> None:
+        subprocess.Popen(["notepad.exe", path])
+
+    def on_result_double_clicked(self) -> None:
+        row_selected = self.results_list.currentRow()
+
+        if len(self.last_results) > row_selected >= 0:
+            path = self.last_results[row_selected].path
+            pathlib_path = Path(path).resolve()
+
+            if not pathlib_path.exists():
+                self.status_label.setText("File not exists")
+                return
+
+            if not pathlib_path.is_file():
+                self.status_label.setText("The path you chose is not a file's path")
+
+            self._open_file_with_default_app(path)
