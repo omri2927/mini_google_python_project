@@ -421,6 +421,7 @@ class MainWindow(QMainWindow):
                 self.status_label.setText("Select folder first")
                 return
             self.last_results = query.search_exact(self.query_edit.text(), files=self.files)
+            self.legend_list.clear()
         self.results_list.clear()
 
         if len(self.last_results) == 0:
@@ -541,7 +542,8 @@ class MainWindow(QMainWindow):
         if not snippets:
             return
 
-        tokens = sorted(set(tokens), key=len, reverse=True)
+        tokens = set(tokens)
+        tokens = sorted(list(tokens), key=lambda item: (-len(item), item))
 
         if len(tokens) == 0:
             # Show text without highlights
