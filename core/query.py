@@ -154,3 +154,53 @@ def _tfidf_score_for_file(
         total_score += tf * idf
 
     return total_score
+
+def search_token_contains(
+    query: str,
+    *,
+    files: list[FileRecord],
+    min_length: int = 2,
+    stopwords: set[str] | None = None,
+    keep_numbers: bool = True,
+    limit: int = 50,
+    case_sensitive: bool = False
+) -> list[SearchResult]:
+    query_tokens = tokenize_query(
+        query,
+        min_length=min_length,
+        stopwords=stopwords,
+        keep_numbers=keep_numbers
+    )
+
+    # If no usable tokens, return empty
+    if not query_tokens:
+        return []
+
+    results: list[SearchResult] = []
+    for file in files:
+        file_matches = 0
+        with open(file.path, "r", encoding="utf-8", errors="ignore") as f:
+            all_file_data = f.read().lower() if not case_sensitive else f.read()
+            all_file_lines = all_file_data.split("\n")
+
+            for token in query_tokens:
+                for line in all_file_lines:
+                    if case_sensitive:
+                        if token in line:
+                            file_matches += 1
+                    else:
+                        if token.lower() in line.lower():
+                            file_matches += 1
+
+        if file_matches == 0:
+            continue
+
+        file_score = float(file_matches)
+
+        results.append(SearchResult(path=file.path, matches_count=file_matches,
+                                    score=file_score,
+                                    snippets=snippets.make_snippets_contains(path=file.path,
+                                                                             query_tokens=query_tokens)))
+
+    results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
+    return results[:limit]

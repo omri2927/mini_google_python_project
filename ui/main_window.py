@@ -1,6 +1,7 @@
 import hashlib
 import subprocess
 from datetime import datetime
+from typing import Literal
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, QThread
@@ -69,6 +70,7 @@ class MainWindow(QMainWindow):
         # Last displayed results list (used to map a selected UI row -> SearchResult).
         self.last_results: list[SearchResult] = []
         self.last_query_tokens: list[str] = []
+        self.last_search_mode: Literal["and", "contains", "exact"] = "and"
 
         self._build_ui()
         self._apply_style()
@@ -88,6 +90,7 @@ class MainWindow(QMainWindow):
         self.path_edit.setReadOnly(True)
 
         self.token_and_radio_button = QRadioButton("Token AND")
+        self.token_contains_radio_button = QRadioButton("Token CONTAINS")
         self.exact_radio_button = QRadioButton("Exact")
 
         self.browse_btn = QPushButton("Browse...")
@@ -133,6 +136,7 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.query_edit)
         search_layout.addWidget(self.search_btn)
         search_layout.addWidget(self.token_and_radio_button)
+        search_layout.addWidget(self.token_contains_radio_button)
         search_layout.addWidget(self.exact_radio_button)
 
         # 4. Main Content Splitters
@@ -406,7 +410,8 @@ class MainWindow(QMainWindow):
             self.status_label.setText("Enter a query")
             return
 
-        if not self.token_and_radio_button.isChecked() and not self.exact_radio_button.isChecked():
+        if not self.token_and_radio_button.isChecked() and not self.exact_radio_button.isChecked() \
+                and not self.token_contains_radio_button.isChecked():
             self.token_and_radio_button.setChecked(True)
 
         if self.token_and_radio_button.isChecked():
@@ -418,12 +423,23 @@ class MainWindow(QMainWindow):
             self.last_query_tokens = query.tokenize_query(self.query_edit.text())
             self.update_token_legend(self.last_query_tokens)
             self.last_results = query.search_and(self.query_edit.text(), files=self.files, index=self.index)
+        elif self.token_contains_radio_button.isChecked():
+            if self.files is None:
+                self.status_label.setText("Select folder first")
+                return
+
+            self.last_query_tokens = query.tokenize_query(self.query_edit.text())
+            self.update_token_legend(self.last_query_tokens)
+            self.last_results = query.search_token_contains(self.query_edit.text(), files=self.files)
+            self.last_search_mode = "contains"
         elif self.exact_radio_button.isChecked():
             if self.files is None:
                 self.status_label.setText("Select folder first")
                 return
+
             self.last_results = query.search_exact(self.query_edit.text(), files=self.files)
             self.legend_list.clear()
+
         self.results_list.clear()
 
         if len(self.last_results) == 0:

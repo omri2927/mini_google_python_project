@@ -5,7 +5,7 @@ def make_snippets(
     path: str,
     query_tokens: list[str],
     *,
-    max_snippets: int = 25,
+    max_snippets: int = 3,
     max_len: int = 180,
     min_length: int = 2,
     stopwords: set[str] | None = None,
@@ -51,5 +51,28 @@ def make_exact_snippets(
 
     return snippets_list
 
+def make_snippets_contains(
+    path: str,
+    query_tokens: list[str],
+    *,
+    max_snippets: int = 3,
+    max_len: int = 180,
+    case_sensitive: bool = False
+) -> list[str]:
+    snippets_list: list[str] = []
 
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            for token in query_tokens:
+                if case_sensitive:
+                    if token in line:
+                        snippets_list.append(line[:max_len])
+                        break
+                else:
+                    if token.lower() in line.lower():
+                        snippets_list.append(line[:max_len])
 
+            if len(snippets_list) == max_snippets:
+                break
+
+    return snippets_list
