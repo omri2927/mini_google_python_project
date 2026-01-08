@@ -71,6 +71,7 @@ def make_snippets_contains(
                 else:
                     if token.lower() in line.lower():
                         snippets_list.append(line[:max_len])
+                        break
 
             if len(snippets_list) == max_snippets:
                 break

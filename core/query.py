@@ -155,6 +155,27 @@ def _tfidf_score_for_file(
 
     return total_score
 
+def _line_contains_any_token(line: str, tokens: list[str], *, case_sensitive: bool) -> bool:
+    for token in tokens:
+        if not case_sensitive:
+            if token.lower() in line.lower():
+                return True
+        else:
+            if token in line:
+                return True
+
+    return False
+
+def _count_lines_with_any_token(path: str, tokens: list[str], *, case_sensitive: bool) -> int:
+    count_lines_with_tokens = 0
+
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            if _line_contains_any_token(line, tokens=tokens, case_sensitive=case_sensitive):
+                count_lines_with_tokens += 1
+
+    return count_lines_with_tokens
+
 def search_token_contains(
     query: str,
     *,
@@ -172,25 +193,15 @@ def search_token_contains(
         keep_numbers=keep_numbers
     )
 
+    query_tokens = list(set(query_tokens))
+
     # If no usable tokens, return empty
     if not query_tokens:
         return []
 
     results: list[SearchResult] = []
     for file in files:
-        file_matches = 0
-        with open(file.path, "r", encoding="utf-8", errors="ignore") as f:
-            all_file_data = f.read().lower() if not case_sensitive else f.read()
-            all_file_lines = all_file_data.split("\n")
-
-            for token in query_tokens:
-                for line in all_file_lines:
-                    if case_sensitive:
-                        if token in line:
-                            file_matches += 1
-                    else:
-                        if token.lower() in line.lower():
-                            file_matches += 1
+        file_matches = _count_lines_with_any_token(file.path, query_tokens, case_sensitive=case_sensitive)
 
         if file_matches == 0:
             continue
@@ -200,7 +211,8 @@ def search_token_contains(
         results.append(SearchResult(path=file.path, matches_count=file_matches,
                                     score=file_score,
                                     snippets=snippets.make_snippets_contains(path=file.path,
-                                                                             query_tokens=query_tokens)))
+                                                                             query_tokens=query_tokens,
+                                                                             case_sensitive=case_sensitive)))
 
     results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
     return results[:limit]

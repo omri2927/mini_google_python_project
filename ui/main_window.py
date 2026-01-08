@@ -423,6 +423,7 @@ class MainWindow(QMainWindow):
             self.last_query_tokens = query.tokenize_query(self.query_edit.text())
             self.update_token_legend(self.last_query_tokens)
             self.last_results = query.search_and(self.query_edit.text(), files=self.files, index=self.index)
+            self.last_search_mode = "and"
         elif self.token_contains_radio_button.isChecked():
             if self.files is None:
                 self.status_label.setText("Select folder first")
@@ -439,6 +440,8 @@ class MainWindow(QMainWindow):
 
             self.last_results = query.search_exact(self.query_edit.text(), files=self.files)
             self.legend_list.clear()
+            self.last_query_tokens.clear()
+            self.last_search_mode = "exact"
 
         self.results_list.clear()
 
@@ -476,7 +479,7 @@ class MainWindow(QMainWindow):
         # Show snippets for the selected result.
         self.snippets_box.setPlainText("\n".join(self.last_results[row].snippets))
 
-        if self.exact_radio_button.isChecked():
+        if self.last_search_mode == "exact":
             self.show_exact_snippets_with_highlight(self.last_results[row].snippets, self.query_edit.text())
         else:
             self.show_token_snippets_with_highlight(self.last_results[row].snippets, self.last_query_tokens)
