@@ -9,13 +9,15 @@ def tokenize_query(
     *,
     min_length: int = 2,
     stopwords: set[str] | None = None,
-    keep_numbers: bool = True
+    keep_numbers: bool = True,
+    case_sensitive: bool = False
 ) -> list[str]:
     return tokenizer.tokenize_line(
         query,
         min_length=min_length,
         stopwords=stopwords,
         keep_numbers=keep_numbers,
+        case_sensitive=case_sensitive
     )
 
 # AND search: return results for files that contain all query tokens.
@@ -27,51 +29,73 @@ def search_and(
     min_length: int = 2,
     stopwords: set[str] | None = None,
     keep_numbers: bool = True,
-    limit: int = 50
+    limit: int = 50,
+    case_sensitive: bool = False
 ) -> list[SearchResult]:
     query_tokens = tokenize_query(
         query,
         min_length=min_length,
         stopwords=stopwords,
-        keep_numbers=keep_numbers
+        keep_numbers=keep_numbers,
+        case_sensitive=case_sensitive
     )
 
     # If no usable tokens, return empty
     if not query_tokens:
         return []
 
-    # Build file-id sets per token (early exit if any token not in index)
+    # 1. Map each query token to its AGGREGATED hits (handling case variations)
+    # This replaces the need for index[tok] later
+    query_token_to_hits: dict[str, list[Hit]] = {}
     token_file_sets: list[set[int]] = []
-    for tok in query_tokens:
-        hits = index.get(tok)
-        if not hits:
-            return []  # AND: if one token missing, no results
-        token_file_sets.append({h.file_id for h in hits})
 
-    # AND = intersection
+    for tok in query_tokens:
+        aggregated_hits = []
+        if case_sensitive:
+            aggregated_hits = index.get(tok, [])
+        else:
+            target = tok.lower()
+            for key, hits in index.items():
+                if key.lower() == target:
+                    aggregated_hits.extend(hits)
+
+        if not aggregated_hits:
+            return []  # AND logic
+
+        query_token_to_hits[tok] = aggregated_hits
+        token_file_sets.append({h.file_id for h in aggregated_hits})
+
     common_file_ids = set.intersection(*token_file_sets)
 
     results: list[SearchResult] = []
-    for file_id in list(common_file_ids):
+    for file_id in common_file_ids:
         path = files[file_id].path
 
-        # matches_count = total hits for those tokens in that file
+        # 2. Calculate matches_count using the aggregated hits we stored
         matches_count = 0
         for tok in query_tokens:
             lines_used: set[int] = set()
-            for h in index[tok]:
+            # USE query_token_to_hits instead of index[tok]
+            for h in query_token_to_hits[tok]:
                 if h.file_id == file_id and h.line_no not in lines_used:
                     matches_count += 1
                     lines_used.add(h.line_no)
 
-        score = _tfidf_score_for_file(file_id=file_id, query_tokens=query_tokens, index=index, total_docs=len(files))
-
+        # 3. Score and Snippets
+        # Note: _tfidf_score_for_file might also need a logic update if it expects index[tok]
+        score = 0
+        if case_sensitive:
+            score = _tfidf_score_for_file(file_id=file_id, query_tokens=query_tokens,
+                                          index=index, total_docs=len(files))
+        else:
+            score = _tfidf_score_for_file(file_id=file_id, query_tokens=query_tokens,
+                                          index=query_token_to_hits, total_docs=len(files))
         snippets_list = snippets.make_snippets(path, query_tokens, min_length=min_length,
-                                               stopwords=stopwords, keep_numbers=keep_numbers)
+                                               stopwords=stopwords, keep_numbers=keep_numbers,
+                                               case_sensitive=case_sensitive)
 
         results.append(SearchResult(path=path, matches_count=matches_count, score=score, snippets=snippets_list))
 
-    # sort best-first
     results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
     return results[:limit]
 
@@ -80,7 +104,8 @@ def search_exact(
     query_text: str,
     *,
     files: list[FileRecord],
-    limit: int = 50
+    limit: int = 50,
+    case_sensitive: bool = False
 ) -> list[SearchResult]:
     if not query_text.strip():
         return []
@@ -88,7 +113,7 @@ def search_exact(
     results_list: list[SearchResult] = list()
 
     for file_record in files:
-        matches_count = _count_exact_in_file(file_record.path, query_text)
+        matches_count = _count_exact_in_file(file_record.path, query_text, case_sensitive=case_sensitive)
 
         # Skip files with zero matches (usually what you want in a search UI).
         if matches_count == 0:
@@ -100,19 +125,24 @@ def search_exact(
                                          matches_count=matches_count,
                                          score=score,
                                          snippets=snippets.make_exact_snippets(path=file_record.path,
-                                                                               query_text=query_text)))
+                                                                               query_text=query_text,
+                                                                               case_sensitive=case_sensitive)))
 
     results_list.sort(key=lambda r: (-r.matches_count, r.path))
     return results_list[:limit]
 
 # Return number of lines in file that contain query_text (case-sensitive, count once per line)
-def _count_exact_in_file(path: str, query_text: str) -> int:
+def _count_exact_in_file(path: str, query_text: str, case_sensitive: bool = False) -> int:
     total_lines_matched = 0
 
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         for line in f:
-            if query_text in line:
-                total_lines_matched += 1
+            if case_sensitive:
+                if query_text in line:
+                    total_lines_matched += 1
+            else:
+                if query_text.lower() in line.lower():
+                    total_lines_matched += 1
 
     return total_lines_matched
 
@@ -190,7 +220,8 @@ def search_token_contains(
         query,
         min_length=min_length,
         stopwords=stopwords,
-        keep_numbers=keep_numbers
+        keep_numbers=keep_numbers,
+        case_sensitive=case_sensitive
     )
 
     query_tokens = list(set(query_tokens))

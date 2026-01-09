@@ -7,7 +7,7 @@ from pathlib import Path
 from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtWidgets import QMainWindow, QLabel, QLineEdit, QPushButton, QProgressBar, QListWidget, QPlainTextEdit, \
     QVBoxLayout, QHBoxLayout, QWidget, QSplitter, QFileDialog, QRadioButton, QTextEdit, QListWidgetItem, \
-    QAbstractItemView, QSizePolicy
+    QAbstractItemView, QSizePolicy, QCheckBox
 from PyQt6.QtGui import QColor, QTextCursor, QTextCharFormat, QTextDocument, QPixmap, QIcon
 
 from core import query, persist
@@ -93,6 +93,9 @@ class MainWindow(QMainWindow):
         self.token_contains_radio_button = QRadioButton("Token CONTAINS")
         self.exact_radio_button = QRadioButton("Exact")
 
+        self.case_sensitive_checkbox = QCheckBox("Case Sensitive")
+        self.case_sensitive_checkbox.setChecked(False)
+
         self.browse_btn = QPushButton("Browse...")
         self.build_btn = QPushButton("Build Index")
         self.save_btn = QPushButton("Save Index")
@@ -138,6 +141,7 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.token_and_radio_button)
         search_layout.addWidget(self.token_contains_radio_button)
         search_layout.addWidget(self.exact_radio_button)
+        search_layout.addWidget(self.case_sensitive_checkbox)
 
         # 4. Main Content Splitters
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -410,6 +414,10 @@ class MainWindow(QMainWindow):
             self.status_label.setText("Enter a query")
             return
 
+        is_case_sensitive = False
+        if self.case_sensitive_checkbox.isChecked():
+            is_case_sensitive = True
+
         if not self.token_and_radio_button.isChecked() and not self.exact_radio_button.isChecked() \
                 and not self.token_contains_radio_button.isChecked():
             self.token_and_radio_button.setChecked(True)
@@ -420,25 +428,30 @@ class MainWindow(QMainWindow):
                 self.status_label.setText("Build index first")
                 return
 
-            self.last_query_tokens = query.tokenize_query(self.query_edit.text())
+            self.last_query_tokens = query.tokenize_query(self.query_edit.text(),
+                                                          case_sensitive=is_case_sensitive)
             self.update_token_legend(self.last_query_tokens)
-            self.last_results = query.search_and(self.query_edit.text(), files=self.files, index=self.index)
+            self.last_results = query.search_and(self.query_edit.text(), files=self.files, index=self.index,
+                                                 case_sensitive=is_case_sensitive)
             self.last_search_mode = "and"
         elif self.token_contains_radio_button.isChecked():
             if self.files is None:
                 self.status_label.setText("Select folder first")
                 return
 
-            self.last_query_tokens = query.tokenize_query(self.query_edit.text())
+            self.last_query_tokens = query.tokenize_query(self.query_edit.text(),
+                                                          case_sensitive=self.case_sensitive_checkbox.isChecked())
             self.update_token_legend(self.last_query_tokens)
-            self.last_results = query.search_token_contains(self.query_edit.text(), files=self.files)
+            self.last_results = query.search_token_contains(self.query_edit.text(), files=self.files,
+                                                            case_sensitive=is_case_sensitive)
             self.last_search_mode = "contains"
         elif self.exact_radio_button.isChecked():
             if self.files is None:
                 self.status_label.setText("Select folder first")
                 return
 
-            self.last_results = query.search_exact(self.query_edit.text(), files=self.files)
+            self.last_results = query.search_exact(self.query_edit.text(), files=self.files,
+                                                   case_sensitive=is_case_sensitive)
             self.legend_list.clear()
             self.last_query_tokens.clear()
             self.last_search_mode = "exact"
@@ -480,9 +493,11 @@ class MainWindow(QMainWindow):
         self.snippets_box.setPlainText("\n".join(self.last_results[row].snippets))
 
         if self.last_search_mode == "exact":
-            self.show_exact_snippets_with_highlight(self.last_results[row].snippets, self.query_edit.text())
+            self.show_exact_snippets_with_highlight(self.last_results[row].snippets, self.query_edit.text(),
+                                                    case_sensitive=self.case_sensitive_checkbox.isChecked())
         else:
-            self.show_token_snippets_with_highlight(self.last_results[row].snippets, self.last_query_tokens)
+            self.show_token_snippets_with_highlight(self.last_results[row].snippets, self.last_query_tokens,
+                                                    case_sensitive=self.case_sensitive_checkbox.isChecked())
         self.status_label.setText(f"Showing result for: {self.last_results[row].path}")
 
     """
@@ -492,7 +507,8 @@ class MainWindow(QMainWindow):
     def show_exact_snippets_with_highlight(
         self,
         snippets: list[str],
-        query_text: str
+        query_text: str,
+        case_sensitive: bool = False
     ) -> None:
         self.snippets_box.clear()
         self.snippets_box.setExtraSelections([])
@@ -518,7 +534,7 @@ class MainWindow(QMainWindow):
         cursor = QTextCursor(doc)
         cursor.movePosition(QTextCursor.MoveOperation.Start)
 
-        flags = QTextDocument.FindFlag.FindCaseSensitively
+        flags = QTextDocument.FindFlag.FindCaseSensitively if case_sensitive else QTextDocument.FindFlag(0)
 
         while True:
             cursor = doc.find(query_text, cursor, flags)
@@ -563,7 +579,8 @@ class MainWindow(QMainWindow):
     def show_token_snippets_with_highlight(
         self,
         snippets: list[str],
-        tokens: list[str]
+        tokens: list[str],
+        case_sensitive: bool = False
     ) -> None:
         self.snippets_box.clear()
         self.snippets_box.setExtraSelections([])
@@ -584,7 +601,7 @@ class MainWindow(QMainWindow):
         selections: list[QTextEdit.ExtraSelection] = []
         doc: QTextDocument = self.snippets_box.document()
 
-        flags = QTextDocument.FindFlag(0)
+        flags = QTextDocument.FindFlag.FindCaseSensitively if case_sensitive else QTextDocument.FindFlag(0)
 
         occupied: list[tuple[int, int]] = []
         for token in tokens:
