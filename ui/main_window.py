@@ -167,67 +167,125 @@ class MainWindow(QMainWindow):
 
     def _apply_style(self) -> None:
         self.setStyleSheet("""
-            /* Base Theme */
+            /* Base Theme - Slate 900 */
             QWidget {
                 background: #0f172a; 
                 color: #f8fafc;
-                font-family: 'Segoe UI', system-ui, sans-serif;
+                font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
                 font-size: 13px;
             }
 
-            /* Status Pill */
+            /* Status Pill - Refined Glow */
             QLabel#statusLabel {
                 background: #1e293b;
                 border: 1px solid #334155;
                 border-radius: 12px;
                 padding: 4px 14px;
-                color: #60a5fa;
+                color: #38bdf8;
                 font-weight: 600;
+                font-size: 11px;
+                text-transform: uppercase;
             }
 
-            /* Input & Output Fields */
+            /* Input & Output Fields - Deep Navy */
             QLineEdit, QListWidget, QPlainTextEdit {
                 background: #020617;
                 border: 1px solid #1e293b;
-                border-radius: 8px;
-                padding: 6px;
+                border-radius: 6px;
+                padding: 8px;
                 selection-background-color: #2563eb;
+                line-height: 1.5;
             }
-            QLineEdit:focus { border: 1px solid #3b82f6; }
+            QLineEdit:focus { 
+                border: 1px solid #3b82f6; 
+                background: #0f172a;
+            }
 
-            /* Modern Scrollbars */
+            /* List Items Selection */
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #1e293b;
+            }
+            QListWidget::item:selected {
+                background: #1d4ed8;
+                color: white;
+                border-radius: 4px;
+            }
+            QListWidget::item:hover {
+                background: #1e293b;
+            }
+
+            /* Modern Custom Scrollbars */
             QScrollBar:vertical {
-                background: #0f172a; width: 8px; margin: 0;
+                background: #0f172a; width: 10px; margin: 0;
             }
             QScrollBar::handle:vertical {
-                background: #334155; border-radius: 4px; min-height: 20px;
+                background: #334155; border-radius: 5px; min-height: 20px; margin: 2px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: #475569;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 
-            /* Buttons */
+            /* Standard Buttons */
             QPushButton {
                 background: #1e293b;
                 border: 1px solid #334155;
-                border-radius: 8px;
+                border-radius: 6px;
                 padding: 6px 16px;
                 font-weight: 500;
+                min-height: 24px;
             }
-            QPushButton:hover { background: #2d3748; border-color: #3b82f6; }
+            QPushButton:hover {
+                background: #334155;
+                border-color: #475569;
+            }
+            QPushButton:pressed {
+                background: #0f172a;
+            }
+
+            /* Action-Specific Button: Search */
             QPushButton#searchButton {
-                background: #2563eb; color: white; border: none;
+                background: #2563eb;
+                border: 1px solid #3b82f6;
+                color: white;
+                font-weight: 700;
             }
-            QPushButton#searchButton:hover { background: #3b82f6; }
-
-            /* Splitter Handle Styling */
-            QSplitter::handle { background: #1e293b; }
-            QSplitter::handle:horizontal { width: 4px; }
-            QSplitter::handle:vertical { height: 4px; }
-
-            /* List Items */
-            QListWidget::item { padding: 8px; border-bottom: 1px solid #111c33; }
-            QListWidget::item:selected { 
-                background: #1e3a8a; border-radius: 4px; border: none; 
+            QPushButton#searchButton:hover {
+                background: #1d4ed8;
             }
+            QPushButton#searchButton:pressed {
+                background: #1e40af;
+            }
+
+            /* Radio Buttons & Checkboxes */
+            QRadioButton, QCheckBox {
+                spacing: 8px;
+            }
+            QRadioButton::indicator, QCheckBox::indicator {
+                width: 16px;
+                height: 16px;
+            }
+
+            /* Progress Bar */
+            QProgressBar {
+                border: 1px solid #1e293b;
+                border-radius: 4px;
+                text-align: center;
+                background: #020617;
+                height: 12px;
+            }
+            QProgressBar::chunk {
+                background: #3b82f6;
+                border-radius: 3px;
+            }
+
+            /* Splitter Handle */
+            QSplitter::handle {
+                background: #1e293b;
+            }
+            QSplitter::handle:horizontal { width: 2px; }
+            QSplitter::handle:vertical { height: 2px; }
         """)
 
     # Connect buttons and worker signals
