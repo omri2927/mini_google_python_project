@@ -1,4 +1,5 @@
 import hashlib
+import re
 import subprocess
 from datetime import datetime
 from typing import Literal
@@ -70,7 +71,7 @@ class MainWindow(QMainWindow):
         # Last displayed results list (used to map a selected UI row -> SearchResult).
         self.last_results: list[SearchResult] = []
         self.last_query_tokens: list[str] = []
-        self.last_search_mode: Literal["and", "contains", "exact"] = "and"
+        self.last_search_mode: Literal["and", "contains", "exact", "regex"] = "and"
 
         self._build_ui()
         self._apply_style()
@@ -92,6 +93,7 @@ class MainWindow(QMainWindow):
         self.token_and_radio_button = QRadioButton("Token AND")
         self.token_contains_radio_button = QRadioButton("Token CONTAINS")
         self.exact_radio_button = QRadioButton("Exact")
+        self.regex_radio_button = QRadioButton("Regex")
 
         self.case_sensitive_checkbox = QCheckBox("Case Sensitive")
         self.case_sensitive_checkbox.setChecked(False)
@@ -141,6 +143,7 @@ class MainWindow(QMainWindow):
         search_layout.addWidget(self.token_and_radio_button)
         search_layout.addWidget(self.token_contains_radio_button)
         search_layout.addWidget(self.exact_radio_button)
+        search_layout.addWidget(self.regex_radio_button)
         search_layout.addWidget(self.case_sensitive_checkbox)
 
         # 4. Main Content Splitters
@@ -477,7 +480,8 @@ class MainWindow(QMainWindow):
             is_case_sensitive = True
 
         if not self.token_and_radio_button.isChecked() and not self.exact_radio_button.isChecked() \
-                and not self.token_contains_radio_button.isChecked():
+                and not self.token_contains_radio_button.isChecked() \
+                and not self.regex_radio_button.isChecked():
             self.token_and_radio_button.setChecked(True)
 
         if self.token_and_radio_button.isChecked():
@@ -513,6 +517,26 @@ class MainWindow(QMainWindow):
             self.legend_list.clear()
             self.last_query_tokens.clear()
             self.last_search_mode = "exact"
+        elif self.regex_radio_button.isChecked():
+            if self.files is None:
+                self.status_label.setText("Select folder first")
+                return
+
+            try:
+                self.last_results = query.search_regex(
+                    self.query_edit.text(),
+                    files=self.files,
+                    case_sensitive=is_case_sensitive
+                )
+            except ValueError:
+                # Update UI to show the error and stop execution
+                self.status_label.setText("Invalid regex")
+                self.results_list.clear()
+                return
+
+            self.legend_list.clear()
+            self.last_search_mode = "regex"
+            self.last_query_tokens.clear()
 
         self.results_list.clear()
 
@@ -552,6 +576,9 @@ class MainWindow(QMainWindow):
 
         if self.last_search_mode == "exact":
             self.show_exact_snippets_with_highlight(self.last_results[row].snippets, self.query_edit.text(),
+                                                    case_sensitive=self.case_sensitive_checkbox.isChecked())
+        elif self.last_search_mode == "regex":
+            self.show_regex_snippets_with_highlight(self.last_results[row].snippets, self.query_edit.text(),
                                                     case_sensitive=self.case_sensitive_checkbox.isChecked())
         else:
             self.show_token_snippets_with_highlight(self.last_results[row].snippets, self.last_query_tokens,
@@ -605,6 +632,53 @@ class MainWindow(QMainWindow):
             selections.append(sel)
 
             cursor.setPosition(cursor.selectionEnd())
+
+        self.snippets_box.setExtraSelections(selections)
+
+    def show_regex_snippets_with_highlight(self, snippets: list[str], pattern: str, *,
+                                           case_sensitive: bool = False) -> None:
+        self.snippets_box.clear()
+        self.snippets_box.setExtraSelections([])
+
+        if not snippets:
+            return
+
+        full_text = "\n".join(snippets)
+
+        if not pattern:
+            # Show text without highlights
+            self.snippets_box.setPlainText("\n".join(snippets))
+            return
+
+        self.snippets_box.setPlainText("\n".join(snippets))
+
+        # 1. Prepare the Regex
+        flags = 0 if case_sensitive else re.IGNORECASE
+        try:
+            compiled_re = re.compile(pattern, flags)
+        except re.error:
+            # If the user enters an invalid regex, we just don't highlight
+            self.status_label.setText("Invalid regex")
+            return
+
+        fmt = QTextCharFormat()
+        fmt.setBackground(QColor("yellow"))
+        fmt.setForeground(QColor("Black"))
+
+        selections: list[QTextEdit.ExtraSelection] = []
+        doc: QTextDocument = self.snippets_box.document()
+
+        for match in compiled_re.finditer(full_text):
+            start, end = match.span()
+
+            cursor = QTextCursor(doc)
+            cursor.setPosition(start)
+            cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+
+            sel = QTextEdit.ExtraSelection()
+            sel.cursor = cursor
+            sel.format = fmt
+            selections.append(sel)
 
         self.snippets_box.setExtraSelections(selections)
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 import math
+import re
+
 from core import tokenizer, snippets
 from core.models import *
 
@@ -247,3 +249,43 @@ def search_token_contains(
 
     results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
     return results[:limit]
+
+def _count_regex_lines_in_file(path: str, compiled_re: re.Pattern) -> int:
+
+    count_lines_matched = 0
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            if compiled_re.search(line):
+                count_lines_matched += 1
+
+    return count_lines_matched
+
+def search_regex(pattern: str, *, files: list[FileRecord], limit: int = 50,
+                 case_sensitive: bool = False) -> list[SearchResult]:
+    if not pattern.strip():
+        return []
+
+    flags = 0 if case_sensitive else re.IGNORECASE
+
+    try:
+        compiled_re = re.compile(pattern, flags)
+    except re.error:
+        raise ValueError()
+
+    results: list[SearchResult] = []
+    for file in files:
+        file_matches = _count_regex_lines_in_file(path=file.path, compiled_re=compiled_re)
+
+        if file_matches == 0:
+            continue
+
+        file_score = float(file_matches)
+
+        results.append(SearchResult(path=file.path, matches_count=file_matches,
+                                    score=file_score, snippets=snippets.make_regex_snippets(path=file.path,
+                                                                                            compiled_re=compiled_re,
+                                                                                            case_sensitive=case_sensitive)))
+
+    results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
+    return results[:limit]
+

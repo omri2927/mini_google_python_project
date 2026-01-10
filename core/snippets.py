@@ -1,3 +1,5 @@
+import re
+
 from core import tokenizer
 
 # Return up to max_snippets lines containing any query token.
@@ -70,7 +72,7 @@ def make_snippets_contains(
     *,
     max_snippets: int = 3,
     max_len: int = 180,
-    case_sensitive: bool = False
+    case_sensitive: bool = False,
 ) -> list[str]:
     snippets_list: list[str] = []
 
@@ -85,6 +87,28 @@ def make_snippets_contains(
                     if token.lower() in line.lower():
                         snippets_list.append(line[:max_len])
                         break
+
+            if len(snippets_list) == max_snippets:
+                break
+
+    return snippets_list
+
+def make_regex_snippets(
+    path: str,
+    compiled_re: re.Pattern,
+    *,
+    max_snippets: int = 3,
+    max_len: int = 180,
+    case_sensitive: bool = False
+) -> list[str]:
+    snippets_list: list[str] = []
+
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            clean_line = line.strip()
+
+            if compiled_re.search(clean_line):
+                snippets_list.append(clean_line[:max_len])
 
             if len(snippets_list) == max_snippets:
                 break
