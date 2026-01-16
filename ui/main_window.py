@@ -9,7 +9,7 @@ from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtWidgets import QMainWindow, QLabel, QLineEdit, QPushButton, QProgressBar, QListWidget, QPlainTextEdit, \
     QVBoxLayout, QHBoxLayout, QWidget, QSplitter, QFileDialog, QRadioButton, QTextEdit, QListWidgetItem, \
     QAbstractItemView, QSizePolicy, QCheckBox
-from PyQt6.QtGui import QColor, QTextCursor, QTextCharFormat, QTextDocument, QPixmap, QIcon
+from PyQt6.QtGui import QColor, QTextCursor, QTextCharFormat, QTextDocument, QPixmap, QIcon, QFont
 
 from core import query, persist
 from core.models import FileRecord, Hit, SearchResult
@@ -615,6 +615,7 @@ class MainWindow(QMainWindow):
 
         selections: list[QTextEdit.ExtraSelection] = []
         doc: QTextDocument = self.snippets_box.document()
+        allowed_ranges = self._compute_allowed_content_ranges()
 
         cursor = QTextCursor(doc)
         cursor.movePosition(QTextCursor.MoveOperation.Start)
@@ -626,6 +627,13 @@ class MainWindow(QMainWindow):
             if cursor.isNull():
                 break
 
+            start_pos = cursor.selectionStart()
+            end_pos = cursor.selectionEnd()
+
+            if not self._is_range_allowed(start_pos, end_pos, allowed_ranges):
+                cursor.setPosition(cursor.selectionEnd())
+                continue
+
             sel = QTextEdit.ExtraSelection()
             sel.cursor = cursor
             sel.format = fmt
@@ -633,7 +641,10 @@ class MainWindow(QMainWindow):
 
             cursor.setPosition(cursor.selectionEnd())
 
-        self.snippets_box.setExtraSelections(selections)
+        header_selections = self._style_snippet_headers()
+        all_selections = selections + header_selections
+
+        self.snippets_box.setExtraSelections(all_selections)
 
     def show_regex_snippets_with_highlight(self, snippets: list[str], pattern: str, *,
                                            case_sensitive: bool = False) -> None:
@@ -667,6 +678,7 @@ class MainWindow(QMainWindow):
 
         selections: list[QTextEdit.ExtraSelection] = []
         doc: QTextDocument = self.snippets_box.document()
+        allowed_ranges = self._compute_allowed_content_ranges()
 
         for match in compiled_re.finditer(full_text):
             start, end = match.span()
@@ -675,12 +687,20 @@ class MainWindow(QMainWindow):
             cursor.setPosition(start)
             cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
 
+            if not self._is_range_allowed(start,
+                                   end,
+                                   allowed_ranges):
+                continue
+
             sel = QTextEdit.ExtraSelection()
             sel.cursor = cursor
             sel.format = fmt
             selections.append(sel)
 
-        self.snippets_box.setExtraSelections(selections)
+        header_selections = self._style_snippet_headers()
+        all_selections = selections + header_selections
+
+        self.snippets_box.setExtraSelections(all_selections)
 
     """
         Return a stable background color for this token (same token -> same color).
@@ -732,6 +752,7 @@ class MainWindow(QMainWindow):
 
         selections: list[QTextEdit.ExtraSelection] = []
         doc: QTextDocument = self.snippets_box.document()
+        allowed_ranges = self._compute_allowed_content_ranges()
 
         flags = QTextDocument.FindFlag.FindCaseSensitively if case_sensitive else QTextDocument.FindFlag(0)
 
@@ -752,7 +773,11 @@ class MainWindow(QMainWindow):
                 start_position = cursor.selectionStart()
                 end_position = cursor.selectionEnd()
 
-                if self._overlaps(start_position, end_position, occupied):
+                if self._overlaps(start_position, end_position, occupied) \
+                        or not self._is_range_allowed(start_position,
+                                                      end_position,
+                                                      allowed_ranges):
+                    cursor.setPosition(cursor.selectionEnd())
                     continue
 
                 occupied.append((start_position, end_position))
@@ -764,7 +789,10 @@ class MainWindow(QMainWindow):
 
                 cursor.setPosition(cursor.selectionEnd())
 
-        self.snippets_box.setExtraSelections(selections)
+        header_selections = self._style_snippet_headers()
+        all_selections = selections + header_selections
+
+        self.snippets_box.setExtraSelections(all_selections)
 
     def update_token_legend(self, tokens: list[str]) -> None:
         self.legend_list.clear()
@@ -780,6 +808,73 @@ class MainWindow(QMainWindow):
             item.setIcon(QIcon(pixmap))
 
             self.legend_list.addItem(item)
+
+    def _style_snippet_headers(self) -> list[QTextEdit.ExtraSelection]:
+        extra_selections = []
+        doc: QTextDocument = self.snippets_box.document()
+        block = doc.begin()
+
+        highlight_format = QTextCharFormat()
+        highlight_format.setForeground(QColor("#00FFFF"))
+        highlight_format.setFontWeight(QFont.Weight.Bold)
+        highlight_format.setBackground(QColor("#2A2A2A"))
+
+        while block.isValid():
+            text = block.text().strip()
+
+            if text.startswith("Line"):
+                selection = QTextEdit.ExtraSelection()
+                selection.format = highlight_format
+
+                cursor = QTextCursor(block)
+                cursor.movePosition(QTextCursor.MoveOperation.StartOfBlock)
+                cursor.movePosition(QTextCursor.MoveOperation.EndOfBlock, QTextCursor.MoveMode.KeepAnchor)
+
+                selection.cursor = cursor
+                extra_selections.append(selection)
+
+            block = block.next()
+
+        return extra_selections
+
+    def _compute_allowed_content_ranges(self) -> list[tuple[int, int]]:
+        doc: QTextDocument = self.snippets_box.document()
+        allowed_ranges: list[tuple[int, int]] = []
+
+        block = doc.firstBlock()
+        this_range: list[int] = list()
+        while block.isValid():
+            line_text = block.text()
+
+            if line_text.strip().startswith("Line"):
+                block = block.next()
+                continue
+            elif set(line_text.strip()) == {'-'}:
+                if len(this_range) == 2:
+                    allowed_ranges.append((this_range[0], this_range[1]))
+                    this_range = []
+            else:
+                if len(this_range) == 0:
+                    this_range.append(block.position())
+                    this_range.append(block.position() + block.length())
+                else:
+                    this_range[1] = block.position() + block.length()
+
+            block = block.next()
+
+        if len(this_range) == 2 and (this_range[0], this_range[1]) not in allowed_ranges:
+            allowed_ranges.append((this_range[0], this_range[1]))
+
+        return allowed_ranges
+
+    @staticmethod
+    def _is_range_allowed(start: int, end: int,
+                          allowed: list[tuple[int, int]]) -> bool:
+        for allowed_range in allowed:
+            if start >= allowed_range[0] and end <= allowed_range[1]:
+                return True
+
+        return False
 
     @staticmethod
     def _open_file_with_default_app(path: str) -> None:

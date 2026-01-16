@@ -282,9 +282,9 @@ def search_regex(pattern: str, *, files: list[FileRecord], limit: int = 50,
         file_score = float(file_matches)
 
         results.append(SearchResult(path=file.path, matches_count=file_matches,
-                                    score=file_score, snippets=snippets.make_regex_snippets(path=file.path,
-                                                                                            compiled_re=compiled_re,
-                                                                                            case_sensitive=case_sensitive)))
+                                    score=file_score,
+                                    snippets=snippets.make_regex_snippets(path=file.path,
+                                                                          compiled_re=compiled_re)))
 
     results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
     return results[:limit]

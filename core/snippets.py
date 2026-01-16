@@ -2,7 +2,7 @@ import re
 
 from core import tokenizer
 
-NUM_OF_SEPARATORS_BETWEEN_LINES = 50
+NUM_OF_SEPARATORS_BETWEEN_LINES = 120
 MAX_LINES_IN_BLOCK = 8
 
 def token_and_matching(line: str, q_set: set[str], case_sensitive: bool,
