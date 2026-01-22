@@ -4,7 +4,15 @@ from pathlib import Path
 import os
 import csv
 import json
+import xml.etree.ElementTree as et
 
+
+# text files constants
+MAX_TEXT_FILE_BYTES = 8 * 1_000_000
+MAX_TEXT_UNITS = 500
+MAX_TEXT_UNIT_LEN = 200
+
+# csv constants
 MAX_CSV_HEADER_LENGTH = 40
 MAX_CSV_UNITS = 500
 MAX_CSV_UNIT_LEN = 130
@@ -18,6 +26,19 @@ MAX_JSON_LIST_ITEMS = 100
 MAX_JSON_DICT_ITEMS = 150
 MAX_JSON_KEY_LEN = 125
 
+# xml constants
+MAX_XML_FILE_BYTES = 10 * 1_000_000
+MAX_XML_UNITS = 400
+MAX_XML_UNIT_LEN = 180
+MAX_XML_DEPTH = 8
+MAX_XML_CHILDREN_PER_NODE = 20
+MAX_XML_ATTRS_PER_NODE = 15
+MAX_XML_NODE_TAILS = 2
+MAX_XML_UNITS_PER_NODE = 15
+MAX_XML_TAG_LEN = 50
+MAX_XML_PATH_LEN = 220
+
+
 def get_file_extension(path: str) -> str:
     return Path(path).suffix
 
@@ -26,7 +47,19 @@ def clamp_units(units: list[str], *, max_units: int, max_len: int) -> list[str]:
 
 
 def extract_plaintext_units(path: str) -> list[str]:
-    pass
+    if not path or os.path.getsize(path) > MAX_TEXT_FILE_BYTES:
+        return []
+
+    units_list = []
+    with open(path, "r", encoding="utf-8-sig", errors="ignore") as file:
+        for line in file:
+            if len(units_list) == MAX_TEXT_UNITS:
+                break
+            formatted_line = line[:-1].rstrip()[:MAX_TEXT_UNIT_LEN]
+            if formatted_line:
+                units_list.append(formatted_line)
+
+    return clamp_units(units_list, max_units=MAX_TEXT_UNITS, max_len=MAX_TEXT_UNIT_LEN)
 
 
 def _is_number(string: str):
@@ -205,9 +238,118 @@ def extract_json_units(path: str) -> list[str]:
     _flatten_json(data=data, prefix="", depth=0, out=out)
     return clamp_units(out, max_units=MAX_JSON_UNITS, max_len=MAX_JSON_UNIT_LEN)
 
+def _load_xml_root(path: str) -> et.Element | None:
+    if not path or os.path.getsize(path) > MAX_XML_FILE_BYTES:
+        return None
+
+    try:
+        with open(path, mode='r', encoding='utf-8-sig') as file:
+            tree = et.parse(file)
+            return tree.getroot()
+
+    except FileNotFoundError:
+        print(f"Error: File not found at {path}")
+    except et.ParseError as e:
+        print(f"Invalid XML: {e}")
+    except UnicodeDecodeError:
+        print("Error: File is not valid UTF-8.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    return None
+
+def _xml_clean_text(text: str) -> str:
+    text = re.sub(r'[\r\n\t]', ' ', str(text).strip())
+
+    if "  " in text:
+        text = " ".join(text.split())
+
+    if not text:
+        return ""
+
+    return text
+
+def _xml_clean_tag(tag: str) -> str:
+    if "}" in tag:
+        tag = tag.split("}")[-1]
+
+    return tag[:MAX_XML_TAG_LEN].strip()
+
+def _flatten_xml(root: et.Element, *, out: list[str], depth: int, prefix: str = "") -> None:
+    if len(out) == MAX_XML_UNITS or depth == MAX_XML_DEPTH:
+        return
+
+    count_node_units = 0
+
+    current_path = prefix if prefix else _xml_clean_tag(root.tag)
+
+    cleaned_root_text = _xml_clean_text(root.text)
+    if cleaned_root_text:
+        out.append(f"{current_path[:MAX_XML_PATH_LEN]}: {cleaned_root_text}")
+        count_node_units += 1
+
+    total_attrs = 0
+    for attr_name, attr_value in sorted(root.attrib.items()):
+        if count_node_units == MAX_XML_UNITS_PER_NODE:
+            break
+
+        if len(out) == MAX_XML_UNITS:
+            return
+
+        if total_attrs == MAX_XML_ATTRS_PER_NODE:
+            break
+
+        cleand_name = _xml_clean_tag(attr_name)
+        cleaned_value = _xml_clean_text(attr_value)
+
+        if not cleand_name or not cleaned_value:
+            continue
+        else:
+            out.append(f"{current_path}@{cleand_name}: {cleaned_value}")
+            total_attrs += 1
+            count_node_units += 1
+
+    if len(root) > 0:
+        children_passed: dict[str, int] = dict()
+        total_children = 0
+        count_tails = 0
+        for child in root:
+            tag = _xml_clean_tag(child.tag)
+
+            if total_children == MAX_XML_CHILDREN_PER_NODE:
+                break
+
+            if tag in children_passed.keys():
+                children_passed[tag] += 1
+            else:
+                children_passed[tag] = 1
+
+            total_children += 1
+
+            new_prefix = f"{current_path}.{tag}[{children_passed[tag]}]"
+            _flatten_xml(child, out=out, depth=depth+1, prefix=new_prefix)
+
+            if count_node_units < MAX_XML_UNITS_PER_NODE and count_tails < MAX_XML_NODE_TAILS:
+                tail_data = _xml_clean_text(child.tail) if child.tail else ""
+                if tail_data:
+                    out.append(f"{current_path}#tail: {tail_data}")
+                    count_node_units += 1
+                    count_tails += 1
+
+            if len(out) == MAX_XML_UNITS:
+                return
+    else:
+        return
 
 def extract_xml_units(path: str) -> list[str]:
-    pass
+    root = _load_xml_root(path)
+    units: list[str] = []
+
+    if root is None:
+        return []
+
+    _flatten_xml(root=root, out=units, depth=0, prefix="")
+    return clamp_units(units=units, max_units=MAX_XML_UNITS, max_len=MAX_XML_UNIT_LEN)
 
 
 def extract_units_by_extension(path: str, ext: str, *, case_sensitive: bool) -> list[str]:
