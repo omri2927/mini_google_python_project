@@ -8,6 +8,9 @@ class FileType(Enum):
     LOG = 2
     PY = 3
     MD = 4
+    CSV = 5
+    JSON = 6
+    XML = 7
 
 class FileRecord(NamedTuple):
     # Metadata describing a single file discovered during scanning
@@ -19,9 +22,8 @@ class FileRecord(NamedTuple):
 class Hit(NamedTuple):
     # Represents a single match inside a file
     file_id: int
-    line_no: int
-    start: int | None # Start index of the match in the line
-    end: int | None   # End index (exclusive)
+    unit_index: int
+    count: int
 
 @dataclass
 class SearchResult:

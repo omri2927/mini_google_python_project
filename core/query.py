@@ -1,8 +1,9 @@
 from __future__ import annotations
 import math
+import os
 import re
 
-from core import tokenizer, snippets
+from core import tokenizer, snippets, extractors
 from core.models import *
 
 # Tokenize the user query using the same rules as the index
@@ -14,7 +15,7 @@ def tokenize_query(
     keep_numbers: bool = True,
     case_sensitive: bool = False
 ) -> list[str]:
-    return tokenizer.tokenize_line(
+    return tokenizer.tokenize_unit(
         query,
         min_length=min_length,
         stopwords=stopwords,
@@ -75,17 +76,14 @@ def search_and(
 
         # 2. Calculate matches_count using the aggregated hits we stored
         matches_count = 0
+        units_used: set[int] = set()
         for tok in query_tokens:
-            lines_used: set[int] = set()
             # USE query_token_to_hits instead of index[tok]
             for h in query_token_to_hits[tok]:
-                if h.file_id == file_id and h.line_no not in lines_used:
+                if h.file_id == file_id and h.unit_index not in units_used:
                     matches_count += 1
-                    lines_used.add(h.line_no)
+                    units_used.add(h.unit_index)
 
-        # 3. Score and Snippets
-        # Note: _tfidf_score_for_file might also need a logic update if it expects index[tok]
-        score = 0
         if case_sensitive:
             score = _tfidf_score_for_file(file_id=file_id, query_tokens=query_tokens,
                                           index=index, total_docs=len(files))
@@ -135,18 +133,19 @@ def search_exact(
 
 # Return number of lines in file that contain query_text (case-sensitive, count once per line)
 def _count_exact_in_file(path: str, query_text: str, case_sensitive: bool = False) -> int:
-    total_lines_matched = 0
+    total_units_matched = 0
 
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            if case_sensitive:
-                if query_text in line:
-                    total_lines_matched += 1
-            else:
-                if query_text.lower() in line.lower():
-                    total_lines_matched += 1
+    ext = os.path.splitext(path)[1].lower()
+    units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
+    for unit in units:
+        if case_sensitive:
+            if query_text in unit:
+                total_units_matched += 1
+        else:
+            if query_text.lower() in unit.lower():
+                total_units_matched += 1
 
-    return total_lines_matched
+    return total_units_matched
 
 def _idf(token: str, *, index: dict[str, list[Hit]], total_docs: int) -> float:
     if token not in index:
@@ -161,7 +160,7 @@ def _tf(token: str, file_id: int, *, index: dict[str, list[Hit]]) -> float:
     if token not in index:
         return 0.0
 
-    all_file_token_hits = sum(1 for hit in index[token] if hit.file_id == file_id)
+    all_file_token_hits = sum(hit.count for hit in index[token] if hit.file_id == file_id)
     tf = math.sqrt(all_file_token_hits)
 
     return tf
@@ -187,26 +186,28 @@ def _tfidf_score_for_file(
 
     return total_score
 
-def _line_contains_any_token(line: str, tokens: list[str], *, case_sensitive: bool) -> bool:
+def _unit_contains_any_token(unit: str, tokens: list[str], *, case_sensitive: bool) -> bool:
     for token in tokens:
         if not case_sensitive:
-            if token.lower() in line.lower():
+            if token.lower() in unit.lower():
                 return True
         else:
-            if token in line:
+            if token in unit:
                 return True
 
     return False
 
-def _count_lines_with_any_token(path: str, tokens: list[str], *, case_sensitive: bool) -> int:
-    count_lines_with_tokens = 0
+def _count_units_with_any_token(path: str, tokens: list[str], *, case_sensitive: bool) -> int:
+    count_units_with_tokens = 0
 
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            if _line_contains_any_token(line, tokens=tokens, case_sensitive=case_sensitive):
-                count_lines_with_tokens += 1
+    ext = os.path.splitext(path)[1].lower()
+    units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
 
-    return count_lines_with_tokens
+    for unit in units:
+        if _unit_contains_any_token(unit, tokens=tokens, case_sensitive=case_sensitive):
+            count_units_with_tokens += 1
+
+    return count_units_with_tokens
 
 def search_token_contains(
     query: str,
@@ -234,7 +235,7 @@ def search_token_contains(
 
     results: list[SearchResult] = []
     for file in files:
-        file_matches = _count_lines_with_any_token(file.path, query_tokens, case_sensitive=case_sensitive)
+        file_matches = _count_units_with_any_token(file.path, query_tokens, case_sensitive=case_sensitive)
 
         if file_matches == 0:
             continue
@@ -250,15 +251,17 @@ def search_token_contains(
     results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
     return results[:limit]
 
-def _count_regex_lines_in_file(path: str, compiled_re: re.Pattern) -> int:
+def _count_regex_units_in_file(path: str, compiled_re: re.Pattern) -> int:
 
-    count_lines_matched = 0
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            if compiled_re.search(line):
-                count_lines_matched += 1
+    count_units_matched = 0
+    ext = os.path.splitext(path)[1].lower()
+    units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=True)
 
-    return count_lines_matched
+    for unit in units:
+        if compiled_re.search(unit):
+            count_units_matched += 1
+
+    return count_units_matched
 
 def search_regex(pattern: str, *, files: list[FileRecord], limit: int = 50,
                  case_sensitive: bool = False) -> list[SearchResult]:
@@ -274,7 +277,7 @@ def search_regex(pattern: str, *, files: list[FileRecord], limit: int = 50,
 
     results: list[SearchResult] = []
     for file in files:
-        file_matches = _count_regex_lines_in_file(path=file.path, compiled_re=compiled_re)
+        file_matches = _count_regex_units_in_file(path=file.path, compiled_re=compiled_re)
 
         if file_matches == 0:
             continue

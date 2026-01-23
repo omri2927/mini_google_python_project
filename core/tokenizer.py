@@ -28,10 +28,10 @@ def filter_tokens(tokens: list[str], stopwords: set[str] | None, min_length: int
     return filtered_tokens
 
 # get a string representing a line from a file and splitting it to tokens
-def tokenize_line(line: str, min_length: int = 2,
+def tokenize_unit(unit: str, min_length: int = 2,
                   stopwords: set[str] | None = None, keep_numbers: bool = True,
                   case_sensitive: bool = False) -> list[str]:
-    tokenized_list = split_to_tokens(normalize_text(line, keep_numbers, case_sensitive=case_sensitive))
+    tokenized_list = split_to_tokens(normalize_text(unit, keep_numbers, case_sensitive=case_sensitive))
     tokenized_list = filter_tokens(tokenized_list, stopwords, min_length)
 
     return tokenized_list

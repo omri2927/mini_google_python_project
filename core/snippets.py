@@ -1,19 +1,20 @@
 import re
+import os
 
-from core import tokenizer
+from core import tokenizer, extractors
 
-NUM_OF_SEPARATORS_BETWEEN_LINES = 120
-MAX_LINES_IN_BLOCK = 8
+NUM_OF_SEPARATORS_BETWEEN_UNITS = 120
+MAX_UNITS_IN_BLOCK = 8
 
-def token_and_matching(line: str, q_set: set[str], case_sensitive: bool,
+def token_and_matching(unit: str, q_set: set[str], case_sensitive: bool,
                        min_length: int = 2, stopwords: set[str] | None = None, keep_numbers: bool = True,):
-    all_line_tokens_list = tokenizer.tokenize_line(line,
+    all_unit_tokens_list = tokenizer.tokenize_unit(unit,
                                                    min_length=min_length,
                                                    stopwords=stopwords,
                                                    keep_numbers=keep_numbers,
                                                    case_sensitive=case_sensitive)
 
-    for token in all_line_tokens_list:
+    for token in all_unit_tokens_list:
         if not case_sensitive:
             token = token.lower()
         if token in q_set:
@@ -21,35 +22,35 @@ def token_and_matching(line: str, q_set: set[str], case_sensitive: bool,
 
     return False
 
-def token_contains_matching(line: str, q_set: set[str], case_sensitive: bool):
-    search_line = line if case_sensitive else line.lower()
+def token_contains_matching(unit: str, q_set: set[str], case_sensitive: bool):
+    search_unit = unit if case_sensitive else unit.lower()
     for token in q_set:
-        if token in search_line:
+        if token in search_unit:
             return True
 
     return False
 
-def exact_matching(line: str, query_text: str, case_sensitive: bool):
+def exact_matching(unit: str, query_text: str, case_sensitive: bool):
     if case_sensitive:
-        if query_text in line:
+        if query_text in unit:
             return True
     else:
-        if query_text in line.lower():
+        if query_text in unit.lower():
             return True
 
     return False
 
-def regex_matching(line, compiled_re: re.Pattern):
-    if compiled_re.search(line):
+def regex_matching(unit, compiled_re: re.Pattern):
+    if compiled_re.search(unit):
         return True
 
     return False
 
-def _find_matching_line_indexes(lines: list[str], *, mode: str, query_tokens: list[str] = None,
+def _find_matching_unit_indexes(units: list[str], *, mode: str, query_tokens: list[str] = None,
                                 query_text: str = None, compiled_re: re.Pattern = None,
                                 min_length: int = 2, stopwords: set[str] = None, keep_numbers: bool = True,
                                 case_sensitive: bool = False) -> list[int]:
-    matching_lines_list: list[int] = []
+    matching_units_list: list[int] = []
 
     q_set = set()
     if query_tokens:
@@ -65,33 +66,33 @@ def _find_matching_line_indexes(lines: list[str], *, mode: str, query_tokens: li
     elif mode == "exact":
         return []
 
-    for i, line in enumerate(lines):
+    for i, unit in enumerate(units):
         if mode == "tokens":
-            if token_and_matching(line=line, q_set=q_set, case_sensitive=case_sensitive,
+            if token_and_matching(unit=unit, q_set=q_set, case_sensitive=case_sensitive,
                                   min_length=min_length, stopwords=stopwords, keep_numbers=keep_numbers):
-                matching_lines_list.append(i)
+                matching_units_list.append(i)
         elif mode == "contains":
-            if token_contains_matching(line=line, q_set=q_set, case_sensitive=case_sensitive):
-                matching_lines_list.append(i)
+            if token_contains_matching(unit=unit, q_set=q_set, case_sensitive=case_sensitive):
+                matching_units_list.append(i)
         elif mode == "exact":
             if query_text:
-                if exact_matching(line=line, query_text=query_text, case_sensitive=case_sensitive):
-                    matching_lines_list.append(i)
+                if exact_matching(unit=unit, query_text=query_text, case_sensitive=case_sensitive):
+                    matching_units_list.append(i)
         elif mode == "regex":
             if compiled_re:
-                if regex_matching(line=line, compiled_re=compiled_re):
-                    matching_lines_list.append(i)
+                if regex_matching(unit=unit, compiled_re=compiled_re):
+                    matching_units_list.append(i)
 
-    matching_lines_list.sort()
-    return matching_lines_list
+    matching_units_list.sort()
+    return matching_units_list
 
-def _build_context_windows(match_indexes: list[int], *, total_lines: int,
+def _build_context_windows(match_indexes: list[int], *, total_units: int,
                            before: int, after: int) -> list[tuple[int, int]]:
     merged: list[list[int]] = []
 
     for match in match_indexes:
         start = max(0, match - before)
-        end = min(total_lines, match + after + 1)
+        end = min(total_units, match + after + 1)
 
         if not merged:
             merged.append([start, end])
@@ -104,30 +105,30 @@ def _build_context_windows(match_indexes: list[int], *, total_lines: int,
 
     final_windows: list[tuple[int, int]] = []
     for start, end in merged:
-        while end - start > MAX_LINES_IN_BLOCK:
-            final_windows.append((start, start + MAX_LINES_IN_BLOCK))
-            start += MAX_LINES_IN_BLOCK
+        while end - start > MAX_UNITS_IN_BLOCK:
+            final_windows.append((start, start + MAX_UNITS_IN_BLOCK))
+            start += MAX_UNITS_IN_BLOCK
         final_windows.append((start, end))
 
     return final_windows
 
-def _format_snippet_block(lines: list[str], *, start: int, end: int, max_len: int) -> str:
+def _format_snippet_block(units: list[str], *, start: int, end: int, max_len: int) -> str:
     display_start = start + 1
-    safe_end = min(end, len(lines))
+    safe_end = min(end, len(units))
     display_end = safe_end
-    block_to_return = f"Lines {display_start}-{display_end}" if display_start != display_end\
-        else f"Line {display_start}"
+    block_to_return = f"Units {display_start}-{display_end}" if display_start != display_end\
+        else f"Unit {display_start}"
 
-    if not lines or start >= len(lines):
+    if not units or start >= len(units):
         return ""
 
-    lines_to_show: list[str] = []
+    units_to_show: list[str] = []
     for i in range(start, safe_end):
-        lines_to_show.append(f" {lines[i][:max_len].rstrip()}")
+        units_to_show.append(f" {units[i][:max_len].rstrip()}")
 
-    content = "\n".join(lines_to_show)
+    content = "\n".join(units_to_show)
     block_to_return += f"\n{content}"
-    block_to_return += f"\n{'-'*NUM_OF_SEPARATORS_BETWEEN_LINES}\n"
+    block_to_return += f"\n{'-'*NUM_OF_SEPARATORS_BETWEEN_UNITS}\n"
 
     return block_to_return
 
@@ -146,22 +147,22 @@ def make_snippets(
 ) -> list[str]:
     snippets_list = []
 
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        all_file_lines = list(f)
+    ext = os.path.splitext(path)[1].lower()
+    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
 
-    matching_lines_indexes = _find_matching_line_indexes(lines=all_file_lines, mode="tokens",
+    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="tokens",
                                                          query_tokens=query_tokens,
                                                          min_length=min_length,
                                                          stopwords=stopwords,
                                                          keep_numbers=keep_numbers,
                                                          case_sensitive=case_sensitive)
 
-    windows_ranges_list = _build_context_windows(match_indexes=matching_lines_indexes,
-                                                 total_lines=len(all_file_lines),
+    windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
+                                                 total_units=len(all_file_units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(lines=all_file_lines,
+        snippets_list.append(_format_snippet_block(units=all_file_units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
@@ -182,19 +183,19 @@ def make_snippets_contains(
 ) -> list[str]:
     snippets_list = []
 
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        all_file_lines = list(f)
+    ext = os.path.splitext(path)[1].lower()
+    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
 
-    matching_lines_indexes = _find_matching_line_indexes(lines=all_file_lines, mode="contains",
+    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="contains",
                                                          query_tokens=query_tokens,
                                                          case_sensitive=case_sensitive)
 
-    windows_ranges_list = _build_context_windows(match_indexes=matching_lines_indexes,
-                                                 total_lines=len(all_file_lines),
+    windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
+                                                 total_units=len(all_file_units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(lines=all_file_lines,
+        snippets_list.append(_format_snippet_block(units=all_file_units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
@@ -215,19 +216,19 @@ def make_exact_snippets(
 ) -> list[str]:
     snippets_list = []
 
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        all_file_lines = list(f)
+    ext = os.path.splitext(path)[1].lower()
+    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
 
-    matching_lines_indexes = _find_matching_line_indexes(lines=all_file_lines, mode="exact",
+    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="exact",
                                                          query_text=query_text,
                                                          case_sensitive=case_sensitive)
 
-    windows_ranges_list = _build_context_windows(match_indexes=matching_lines_indexes,
-                                                 total_lines=len(all_file_lines),
+    windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
+                                                 total_units=len(all_file_units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(lines=all_file_lines,
+        snippets_list.append(_format_snippet_block(units=all_file_units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
@@ -247,18 +248,18 @@ def make_regex_snippets(
 ) -> list[str]:
     snippets_list = []
 
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        all_file_lines = list(f)
+    ext = os.path.splitext(path)[1].lower()
+    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=True)
 
-    matching_lines_indexes = _find_matching_line_indexes(lines=all_file_lines, mode="regex",
+    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="regex",
                                                          compiled_re=compiled_re)
 
-    windows_ranges_list = _build_context_windows(match_indexes=matching_lines_indexes,
-                                                 total_lines=len(all_file_lines),
+    windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
+                                                 total_units=len(all_file_units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(lines=all_file_lines,
+        snippets_list.append(_format_snippet_block(units=all_file_units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
