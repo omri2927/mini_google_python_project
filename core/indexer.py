@@ -39,16 +39,23 @@ def scan_files(root_dir: str, extensions: set[str]) -> list[FileRecord]:
 
     return file_records_list
 
-# Yield (line_no, line_text) for a file without loading it entirely.
-def iter_lines(path: str) -> Iterable[tuple[int, str]]:
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        for line_no, line in enumerate(f, start=1):
-            yield line_no, line.rstrip("\n")
+def build_unit_store(files: list[FileRecord], *, case_sensitive: bool) -> dict[int, list[str]]:
+    units_store: dict[int, list[str]] = dict()
+
+    for file_id, file in enumerate(files):
+        ext = os.path.splitext(file.path)[1].lower()
+        file_units: list[str] = extractors.extract_units_by_extension(path=file.path,
+                                                                      ext=ext,
+                                                                      case_sensitive=case_sensitive)
+        units_store[file_id] = file_units
+
+    return units_store
 
 # Build an inverted index: token -> list of hits.
 def build_index(
     files: list[FileRecord],
     *,
+    unit_store: dict[int, list[str]],
     min_length: int = 2,
     stopwords: set[str] | None = None,
     keep_numbers: bool = True,
@@ -56,10 +63,8 @@ def build_index(
     index: dict[str, list[Hit]] = {}
 
     for file_id, file_record in enumerate(files):
-        ext = os.path.splitext(file_record.path)[1].lower()
-        file_units: list[str] = extractors.extract_units_by_extension(path=file_record.path, ext=ext, case_sensitive=False)
-
-        for unit_index, unit in enumerate(file_units):
+        units = unit_store[file_id]
+        for unit_index, unit in enumerate(units):
             tokens = tokenizer.tokenize_unit(
                 unit=unit,
                 min_length=min_length,

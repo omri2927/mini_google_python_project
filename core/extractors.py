@@ -134,25 +134,30 @@ def parse_csv_rows(path: str, has_header: bool) -> tuple[list[str], list[list[st
     return headers, values
 
 
-def format_csv_row(headers: list[str], row: list[str]) -> str:
+def format_csv_row(headers: list[str], row: list[str],
+                   case_sensitive: bool) -> str:
     MISSING_HEADER = object()
     parts = []
 
     for i, (h, v) in enumerate(zip_longest(headers, row, fillvalue=MISSING_HEADER)):
+        h_display = h.strip()
+        if not case_sensitive:
+            h_display = h_display.casefold()
         if v is MISSING_HEADER:
-            parts.append(f"{h.strip()}: ''")
+            parts.append(f"{h_display}: ''")
         elif h is MISSING_HEADER:
             parts.append(f"col{i + 1}: {v.strip()}")
         else:
-            parts.append(f"{h.strip()}: {v.strip()}")
+            parts.append(f"{h_display}: {v.strip()}")
 
     return " | ".join(parts)
 
-def extract_csv_units(path: str) -> list[str]:
+def extract_csv_units(path: str, case_sensitive: bool) -> list[str]:
     sample = read_csv_sample_rows(path)
     has_header = detect_csv_has_header(sample)
     headers, values = parse_csv_rows(path, has_header=has_header)
-    formatted_csv_units = [format_csv_row(headers, row) for row in values]
+    formatted_csv_units = [format_csv_row(headers, row,
+                                          case_sensitive=case_sensitive) for row in values]
 
     return clamp_units(formatted_csv_units, max_units=MAX_CSV_UNITS, max_len=MAX_CSV_UNIT_LEN)
 
@@ -188,7 +193,8 @@ def _json_value_to_text(value: object) -> str:
 
     return re.sub(r'[\r\n\t]', ' ', str(value).strip())
 
-def _flatten_json(data: object, *, prefix: str, depth: int, out: list[str]) -> None:
+def _flatten_json(data: object, *, prefix: str, depth: int,
+                  out: list[str], case_sensitive: bool) -> None:
     if len(out) == MAX_JSON_UNITS or depth == MAX_JSON_DEPTH:
         return
 
@@ -199,6 +205,8 @@ def _flatten_json(data: object, *, prefix: str, depth: int, out: list[str]) -> N
                 return
 
             string_key = str(key).strip()[:MAX_JSON_KEY_LEN]
+            if not case_sensitive:
+                string_key = string_key.casefold()
 
             if not prefix:
                 new_prefix = string_key
@@ -207,7 +215,8 @@ def _flatten_json(data: object, *, prefix: str, depth: int, out: list[str]) -> N
 
             items_used += 1
 
-            _flatten_json(data[key], prefix=new_prefix, depth=depth+1, out=out)
+            _flatten_json(data[key], prefix=new_prefix, depth=depth+1, out=out,
+                          case_sensitive=case_sensitive)
     elif isinstance(data, list):
         items_used = 0
         for index, value in enumerate(data):
@@ -221,21 +230,23 @@ def _flatten_json(data: object, *, prefix: str, depth: int, out: list[str]) -> N
 
             items_used += 1
 
-            _flatten_json(value, prefix=new_prefix, depth=depth+1, out=out)
+            _flatten_json(value, prefix=new_prefix, depth=depth+1, out=out,
+                          case_sensitive=case_sensitive)
     else:
         if not prefix:
             out.append(f"root: {_json_value_to_text(data)}")
         else:
             out.append(f"{prefix}: {_json_value_to_text(data)}")
 
-def extract_json_units(path: str) -> list[str]:
+def extract_json_units(path: str, case_sensitive: bool) -> list[str]:
     data = _load_json_data(path)
 
     if data is None:
         return []
 
     out = []
-    _flatten_json(data=data, prefix="", depth=0, out=out)
+    _flatten_json(data=data, prefix="",
+                  depth=0, out=out, case_sensitive=case_sensitive)
     return clamp_units(out, max_units=MAX_JSON_UNITS, max_len=MAX_JSON_UNIT_LEN)
 
 def _load_xml_root(path: str) -> et.Element | None:
@@ -269,19 +280,22 @@ def _xml_clean_text(text: str) -> str:
 
     return text
 
-def _xml_clean_tag(tag: str) -> str:
+def _xml_clean_tag(tag: str, case_sensitive: bool) -> str:
     if "}" in tag:
         tag = tag.split("}")[-1]
 
-    return tag[:MAX_XML_TAG_LEN].strip()
+    tag = tag[:MAX_XML_TAG_LEN].strip()
+    return tag if case_sensitive else tag.casefold()
 
-def _flatten_xml(root: et.Element, *, out: list[str], depth: int, prefix: str = "") -> None:
+def _flatten_xml(root: et.Element, *, out: list[str], depth: int,
+                 prefix: str = "", case_sensitive: bool) -> None:
     if len(out) == MAX_XML_UNITS or depth == MAX_XML_DEPTH:
         return
 
     count_node_units = 0
 
-    current_path = prefix if prefix else _xml_clean_tag(root.tag)
+    current_path = prefix if prefix else _xml_clean_tag(root.tag,
+                                                        case_sensitive=case_sensitive)
 
     cleaned_root_text = _xml_clean_text(root.text)
     if cleaned_root_text:
@@ -299,13 +313,13 @@ def _flatten_xml(root: et.Element, *, out: list[str], depth: int, prefix: str = 
         if total_attrs == MAX_XML_ATTRS_PER_NODE:
             break
 
-        cleand_name = _xml_clean_tag(attr_name)
-        cleaned_value = _xml_clean_text(attr_value)
+        clean_attr_name = _xml_clean_tag(attr_name, case_sensitive=case_sensitive)
+        cleaned_attr_value = _xml_clean_text(attr_value)
 
-        if not cleand_name or not cleaned_value:
+        if not clean_attr_name or not cleaned_attr_value:
             continue
         else:
-            out.append(f"{current_path}@{cleand_name}: {cleaned_value}")
+            out.append(f"{current_path}@{clean_attr_name}: {cleaned_attr_value}")
             total_attrs += 1
             count_node_units += 1
 
@@ -314,7 +328,8 @@ def _flatten_xml(root: et.Element, *, out: list[str], depth: int, prefix: str = 
         total_children = 0
         count_tails = 0
         for child in root:
-            tag = _xml_clean_tag(child.tag)
+            tag = _xml_clean_tag(child.tag,
+                                 case_sensitive=case_sensitive)
 
             if total_children == MAX_XML_CHILDREN_PER_NODE:
                 break
@@ -327,7 +342,8 @@ def _flatten_xml(root: et.Element, *, out: list[str], depth: int, prefix: str = 
             total_children += 1
 
             new_prefix = f"{current_path}.{tag}[{children_passed[tag]}]"
-            _flatten_xml(child, out=out, depth=depth+1, prefix=new_prefix)
+            _flatten_xml(child, out=out, depth=depth+1,
+                         prefix=new_prefix, case_sensitive=case_sensitive)
 
             if count_node_units < MAX_XML_UNITS_PER_NODE and count_tails < MAX_XML_NODE_TAILS:
                 tail_data = _xml_clean_text(child.tail) if child.tail else ""
@@ -341,14 +357,15 @@ def _flatten_xml(root: et.Element, *, out: list[str], depth: int, prefix: str = 
     else:
         return
 
-def extract_xml_units(path: str) -> list[str]:
+def extract_xml_units(path: str, case_sensitive: bool) -> list[str]:
     root = _load_xml_root(path)
     units: list[str] = []
 
     if root is None:
         return []
 
-    _flatten_xml(root=root, out=units, depth=0, prefix="")
+    _flatten_xml(root=root, out=units, depth=0,
+                 prefix="", case_sensitive=case_sensitive)
     return clamp_units(units=units, max_units=MAX_XML_UNITS, max_len=MAX_XML_UNIT_LEN)
 
 
@@ -358,13 +375,10 @@ def extract_units_by_extension(path: str, ext: str, *, case_sensitive: bool) -> 
     if ext in {".txt", ".log", ".py", ".md"}:
         return extract_plaintext_units(path)
     elif ext == ".csv":
-        return extract_csv_units(path)
+        return extract_csv_units(path, case_sensitive=case_sensitive)
     elif ext == ".json":
-        return extract_json_units(path)
+        return extract_json_units(path, case_sensitive=case_sensitive)
     elif ext == ".xml":
-        return extract_xml_units(path)
+        return extract_xml_units(path, case_sensitive=case_sensitive)
     else:
         return []
-
-
-

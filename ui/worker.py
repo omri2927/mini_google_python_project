@@ -12,7 +12,7 @@ class IndexWorker(QObject):
     error = pyqtSignal(str)
 
     # Emitted once on successful completion with the produced files and index.
-    finished = pyqtSignal(list, dict)
+    finished = pyqtSignal(list, dict, dict) # files, index, unit_store
 
     def __init__(self,
                  root_dir: str,
@@ -38,28 +38,34 @@ class IndexWorker(QObject):
        3) Emit finished(files, index) on success.
        On any exception: emit error(...) and stop.
     """
+
     def run(self) -> None:
         try:
-            # Phase 1: file system scan.
             self.status.emit("Scanning...")
             valid_files: list[FileRecord] = indexer.scan_files(
                 self.root_dir, self.extensions
             )
 
-            # Phase 2: build the inverted index from scanned files.
-            self.status.emit("Indexing...")
+            if not valid_files:
+                self.error.emit("No files found matching the selected extensions.")
+                return
+
+            self.status.emit("Extracting text...")
+            # Capture the unit_store so we can show snippets later
+            unit_store = indexer.build_unit_store(valid_files, case_sensitive=False)
+
+            self.status.emit("Building search index...")
             index = indexer.build_index(
                 valid_files,
+                unit_store=unit_store,
                 min_length=self.min_length,
                 stopwords=self.stopwords,
                 keep_numbers=self.keep_numbers
             )
+
         except Exception as e:
-            # Any failure is reported to the UI; finished() is not emitted.
-            self.error.emit(
-                f"There was an error during scanning/indexing the files: {e}"
-            )
+            self.error.emit(f"Indexing Error: {e}")
             return
         else:
-            # Successful completion: hand results back to the UI thread.
-            self.finished.emit(valid_files, index)
+            # 2. Emit all three parts to the MainWindow
+            self.finished.emit(valid_files, index, unit_store)

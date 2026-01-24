@@ -16,7 +16,7 @@ from core.models import FileRecord, Hit, SearchResult
 from ui.worker import IndexWorker
 
 # File extensions the UI allows the user to index/search.
-EXTENSIONS = [".txt", ".log", ".py", ".md"]
+EXTENSIONS = [".txt", ".log", ".py", ".md", ".csv", ".json", ".xml"]
 
 
 class MainWindow(QMainWindow):
@@ -36,6 +36,7 @@ class MainWindow(QMainWindow):
         # - index: inverted index token -> list[Hit]
         self.files: list[FileRecord] | None = None
         self.index: dict[str, list[Hit]] | None = None
+        self.unit_store: dict[int, list[str]] | None = None
 
         """
         Metadata describing the currently loaded/built index.
@@ -438,10 +439,12 @@ class MainWindow(QMainWindow):
         self.browse_btn.setEnabled(True)
         self.build_btn.setEnabled(True)
 
-    def on_index_finished(self, files: list[FileRecord], index: dict[str, list[Hit]]) -> None:
+    def on_index_finished(self, files: list[FileRecord], index: dict[str, list[Hit]],
+                          unit_store: dict[int, list[str]]) -> None:
         # Worker finished successfully: store index and enable Save/Search.
         self.files = files
         self.index = index
+        self.unit_store = unit_store
 
         # Restore UI to "ready" state.
         self.progress.setRange(0, 100)
@@ -493,7 +496,8 @@ class MainWindow(QMainWindow):
             self.last_query_tokens = query.tokenize_query(self.query_edit.text(),
                                                           case_sensitive=is_case_sensitive)
             self.update_token_legend(self.last_query_tokens)
-            self.last_results = query.search_and(self.query_edit.text(), files=self.files, index=self.index,
+            self.last_results = query.search_and(self.query_edit.text(), unit_store=self.unit_store,
+                                                 files=self.files, index=self.index,
                                                  case_sensitive=is_case_sensitive)
             self.last_search_mode = "and"
         elif self.token_contains_radio_button.isChecked():
@@ -504,7 +508,9 @@ class MainWindow(QMainWindow):
             self.last_query_tokens = query.tokenize_query(self.query_edit.text(),
                                                           case_sensitive=self.case_sensitive_checkbox.isChecked())
             self.update_token_legend(self.last_query_tokens)
-            self.last_results = query.search_token_contains(self.query_edit.text(), files=self.files,
+            self.last_results = query.search_token_contains(self.query_edit.text(),
+                                                            unit_store=self.unit_store,
+                                                            files=self.files,
                                                             case_sensitive=is_case_sensitive)
             self.last_search_mode = "contains"
         elif self.exact_radio_button.isChecked():
@@ -512,7 +518,9 @@ class MainWindow(QMainWindow):
                 self.status_label.setText("Select folder first")
                 return
 
-            self.last_results = query.search_exact(self.query_edit.text(), files=self.files,
+            self.last_results = query.search_exact(self.query_edit.text(),
+                                                   unit_store=self.unit_store,
+                                                   files=self.files,
                                                    case_sensitive=is_case_sensitive)
             self.legend_list.clear()
             self.last_query_tokens.clear()
@@ -525,6 +533,7 @@ class MainWindow(QMainWindow):
             try:
                 self.last_results = query.search_regex(
                     self.query_edit.text(),
+                    unit_store=self.unit_store,
                     files=self.files,
                     case_sensitive=is_case_sensitive
                 )

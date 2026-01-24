@@ -1,7 +1,6 @@
 import re
-import os
 
-from core import tokenizer, extractors
+from core import tokenizer
 
 NUM_OF_SEPARATORS_BETWEEN_UNITS = 120
 MAX_UNITS_IN_BLOCK = 8
@@ -133,7 +132,7 @@ def _format_snippet_block(units: list[str], *, start: int, end: int, max_len: in
     return block_to_return
 
 def make_snippets(
-    path: str,
+    units: list[str],
     query_tokens: list[str],
     *,
     max_snippets: int = 3,
@@ -147,10 +146,7 @@ def make_snippets(
 ) -> list[str]:
     snippets_list = []
 
-    ext = os.path.splitext(path)[1].lower()
-    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
-
-    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="tokens",
+    matching_units_indexes = _find_matching_unit_indexes(units=units, mode="tokens",
                                                          query_tokens=query_tokens,
                                                          min_length=min_length,
                                                          stopwords=stopwords,
@@ -158,11 +154,11 @@ def make_snippets(
                                                          case_sensitive=case_sensitive)
 
     windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
-                                                 total_units=len(all_file_units),
+                                                 total_units=len(units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(units=all_file_units,
+        snippets_list.append(_format_snippet_block(units=units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
@@ -172,7 +168,7 @@ def make_snippets(
     return snippets_list
 
 def make_snippets_contains(
-    path: str,
+    units: list[str],
     query_tokens: list[str],
     *,
     max_snippets: int = 3,
@@ -183,19 +179,16 @@ def make_snippets_contains(
 ) -> list[str]:
     snippets_list = []
 
-    ext = os.path.splitext(path)[1].lower()
-    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
-
-    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="contains",
+    matching_units_indexes = _find_matching_unit_indexes(units=units, mode="contains",
                                                          query_tokens=query_tokens,
                                                          case_sensitive=case_sensitive)
 
     windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
-                                                 total_units=len(all_file_units),
+                                                 total_units=len(units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(units=all_file_units,
+        snippets_list.append(_format_snippet_block(units=units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
@@ -205,7 +198,7 @@ def make_snippets_contains(
     return snippets_list
 
 def make_exact_snippets(
-    path: str,
+    units: list[str],
     query_text: str,
     *,
     max_snippets: int = 3,
@@ -216,19 +209,16 @@ def make_exact_snippets(
 ) -> list[str]:
     snippets_list = []
 
-    ext = os.path.splitext(path)[1].lower()
-    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=case_sensitive)
-
-    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="exact",
+    matching_units_indexes = _find_matching_unit_indexes(units=units, mode="exact",
                                                          query_text=query_text,
                                                          case_sensitive=case_sensitive)
 
     windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
-                                                 total_units=len(all_file_units),
+                                                 total_units=len(units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(units=all_file_units,
+        snippets_list.append(_format_snippet_block(units=units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
@@ -238,7 +228,7 @@ def make_exact_snippets(
     return snippets_list
 
 def make_regex_snippets(
-    path: str,
+    units: list[str],
     compiled_re: re.Pattern,
     *,
     max_snippets: int = 3,
@@ -248,18 +238,15 @@ def make_regex_snippets(
 ) -> list[str]:
     snippets_list = []
 
-    ext = os.path.splitext(path)[1].lower()
-    all_file_units = extractors.extract_units_by_extension(path=path, ext=ext, case_sensitive=True)
-
-    matching_units_indexes = _find_matching_unit_indexes(units=all_file_units, mode="regex",
+    matching_units_indexes = _find_matching_unit_indexes(units=units, mode="regex",
                                                          compiled_re=compiled_re)
 
     windows_ranges_list = _build_context_windows(match_indexes=matching_units_indexes,
-                                                 total_units=len(all_file_units),
+                                                 total_units=len(units),
                                                  before=context_before, after=context_after)
 
     for start, end in windows_ranges_list:
-        snippets_list.append(_format_snippet_block(units=all_file_units,
+        snippets_list.append(_format_snippet_block(units=units,
                                                    start=start, end=end,
                                                    max_len=max_len))
 
