@@ -5,7 +5,7 @@ def normalize_text(text: str, keep_numbers: bool, case_sensitive: bool) -> str:
     normalized_text = " ".join(re.split(r"[^a-zA-Z\d\s]", text))
 
     if not case_sensitive:
-        normalized_text = normalized_text.lower()
+        normalized_text = normalized_text.casefold()
 
     if not keep_numbers:
         normalized_text = re.sub(r'\d', ' ', normalized_text)

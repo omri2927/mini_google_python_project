@@ -370,7 +370,7 @@ def extract_xml_units(path: str, case_sensitive: bool) -> list[str]:
 
 
 def extract_units_by_extension(path: str, ext: str, *, case_sensitive: bool) -> list[str]:
-    ext = ext.lower()
+    ext = ext.casefold()
 
     if ext in {".txt", ".log", ".py", ".md"}:
         return extract_plaintext_units(path)

@@ -15,14 +15,14 @@ def token_and_matching(unit: str, q_set: set[str], case_sensitive: bool,
 
     for token in all_unit_tokens_list:
         if not case_sensitive:
-            token = token.lower()
+            token = token.casefold()
         if token in q_set:
             return True
 
     return False
 
 def token_contains_matching(unit: str, q_set: set[str], case_sensitive: bool):
-    search_unit = unit if case_sensitive else unit.lower()
+    search_unit = unit if case_sensitive else unit.casefold()
     for token in q_set:
         if token in search_unit:
             return True
@@ -34,7 +34,7 @@ def exact_matching(unit: str, query_text: str, case_sensitive: bool):
         if query_text in unit:
             return True
     else:
-        if query_text in unit.lower():
+        if query_text in unit.casefold():
             return True
 
     return False
@@ -54,14 +54,14 @@ def _find_matching_unit_indexes(units: list[str], *, mode: str, query_tokens: li
     q_set = set()
     if query_tokens:
         if not case_sensitive:
-            q_set = {tok.lower() for tok in query_tokens}
+            q_set = {tok.casefold() for tok in query_tokens}
         else:
             q_set = set(query_tokens)
     elif mode != "regex" and mode != "exact":
         return []
 
     if query_text:
-        query_text = query_text if case_sensitive else query_text.lower()
+        query_text = query_text if case_sensitive else query_text.casefold()
     elif mode == "exact":
         return []
 

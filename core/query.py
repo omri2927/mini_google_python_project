@@ -1,9 +1,8 @@
 from __future__ import annotations
 import math
-import os
 import re
 
-from core import tokenizer, snippets, extractors
+from core import tokenizer, snippets
 from core.models import *
 
 # Tokenize the user query using the same rules as the index
@@ -23,26 +22,14 @@ def tokenize_query(
         case_sensitive=case_sensitive
     )
 
-def build_casefold_index(index: dict[str, list[Hit]]) -> dict[str, list[Hit]]:
-    ci: dict[str, list[Hit]] = dict()
-
-    for token, hits in index.items():
-        cf_token = token.casefold()
-
-        if cf_token not in ci:
-            ci[cf_token] = []
-
-        ci[cf_token].extend(hits)
-
-    return ci
-
 # AND search: return results for files that contain all query tokens.
 def search_and(
     query: str,
     *,
     unit_store: dict[int, list[str]],
-    files: list[FileRecord],
+    files: dict[int, FileRecord],
     index: dict[str, list[Hit]],
+    casefold_index: dict[str, list[Hit]],
     min_length: int = 2,
     stopwords: set[str] | None = None,
     keep_numbers: bool = True,
@@ -67,10 +54,11 @@ def search_and(
     # This replaces the need for index[tok] later
     query_token_to_hits: dict[str, list[Hit]] = {}
     token_file_sets: list[set[int]] = []
-    casefold_index = build_casefold_index(index=index)
+
+    active_index = index if case_sensitive else casefold_index
+    query_idfs = {t: _idf(t, index=active_index, total_docs=len(files)) for t in query_tokens}
 
     for tok in query_tokens:
-        aggregated_hits = []
         if case_sensitive:
             aggregated_hits = index.get(tok, [])
         else:
@@ -100,10 +88,10 @@ def search_and(
 
         if case_sensitive:
             score = _tfidf_score_for_file(file_id=file_id, query_tokens=query_tokens,
-                                          index=index, total_docs=len(files))
+                                          index=index, query_idfs=query_idfs)
         else:
             score = _tfidf_score_for_file(file_id=file_id, query_tokens=query_tokens,
-                                          index=query_token_to_hits, total_docs=len(files))
+                                          index=query_token_to_hits, query_idfs=query_idfs)
         snippets_list = snippets.make_snippets(unit_store[file_id], query_tokens, min_length=min_length,
                                                stopwords=stopwords, keep_numbers=keep_numbers,
                                                case_sensitive=case_sensitive)
@@ -118,7 +106,7 @@ def search_exact(
     query_text: str,
     *,
     unit_store: dict[int, list[str]],
-    files: list[FileRecord],
+    files: dict[int, FileRecord],
     limit: int = 50,
     case_sensitive: bool = False
 ) -> list[SearchResult]:
@@ -127,7 +115,7 @@ def search_exact(
 
     results_list: list[SearchResult] = list()
 
-    for file_id, file_record in enumerate(files):
+    for file_id, file_record in files.items():
         matches_count = _count_exact_in_file(unit_store[file_id], query_text, case_sensitive=case_sensitive)
 
         # Skip files with zero matches (usually what you want in a search UI).
@@ -156,7 +144,7 @@ def _count_exact_in_file(units: list[str],
             if query_text in unit:
                 total_units_matched += 1
         else:
-            if query_text.lower() in unit.lower():
+            if query_text.casefold() in unit.casefold():
                 total_units_matched += 1
 
     return total_units_matched
@@ -184,7 +172,7 @@ def _tfidf_score_for_file(
     query_tokens: list[str],
     *,
     index: dict[str, list[Hit]],
-    total_docs: int
+    query_idfs: dict[str, float]
 ) -> float:
     total_score = 0
     distinct_query_tokens = set(query_tokens)
@@ -194,7 +182,7 @@ def _tfidf_score_for_file(
 
     for token in distinct_query_tokens:
         tf = _tf(token, file_id, index=index)
-        idf = _idf(token, index=index, total_docs=total_docs)
+        idf = query_idfs.get(token, 0.0)
 
         total_score += tf * idf
 
@@ -203,7 +191,7 @@ def _tfidf_score_for_file(
 def _unit_contains_any_token(unit: str, tokens: list[str], *, case_sensitive: bool) -> bool:
     for token in tokens:
         if not case_sensitive:
-            if token.lower() in unit.lower():
+            if token.casefold() in unit.casefold():
                 return True
         else:
             if token in unit:
@@ -228,7 +216,7 @@ def search_token_contains(
     query: str,
     *,
     unit_store: dict[int, list[str]],
-    files: list[FileRecord],
+    files: dict[int, FileRecord],
     min_length: int = 2,
     stopwords: set[str] | None = None,
     keep_numbers: bool = True,
@@ -250,15 +238,18 @@ def search_token_contains(
         return []
 
     results: list[SearchResult] = []
-    for file_id, file in enumerate(files):
-        file_matches = _count_units_with_any_token(unit_store[file_id], query_tokens, case_sensitive=case_sensitive)
+    for file_id, file_record in files.items():
+        units = unit_store.get(file_id, [])
+        file_matches = _count_units_with_any_token(units=units,
+                                                   tokens=query_tokens,
+                                                   case_sensitive=case_sensitive)
 
         if file_matches == 0:
             continue
 
         file_score = float(file_matches)
 
-        results.append(SearchResult(path=file.path, matches_count=file_matches,
+        results.append(SearchResult(path=file_record.path, matches_count=file_matches,
                                     score=file_score,
                                     snippets=snippets.make_snippets_contains(unit_store[file_id],
                                                                              query_tokens=query_tokens,
@@ -279,7 +270,7 @@ def _count_regex_units_in_file(units: list[str], compiled_re: re.Pattern) -> int
 def search_regex(pattern: str,
     *,
     unit_store: dict[int, list[str]],
-    files: list[FileRecord],
+    files: dict[int, FileRecord],
     limit: int = 50,
     case_sensitive: bool = False
 ) -> list[SearchResult]:
@@ -294,7 +285,7 @@ def search_regex(pattern: str,
         raise ValueError()
 
     results: list[SearchResult] = []
-    for file_id, file in enumerate(files):
+    for file_id, file in files.items():
         file_matches = _count_regex_units_in_file(unit_store[file_id], compiled_re=compiled_re)
 
         if file_matches == 0:
@@ -309,4 +300,3 @@ def search_regex(pattern: str,
 
     results.sort(key=lambda r: (-r.score, -r.matches_count, r.path))
     return results[:limit]
-

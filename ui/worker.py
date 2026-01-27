@@ -12,7 +12,7 @@ class IndexWorker(QObject):
     error = pyqtSignal(str)
 
     # Emitted once on successful completion with the produced files and index.
-    finished = pyqtSignal(list, dict, dict) # files, index, unit_store
+    finished = pyqtSignal(dict, dict, dict, dict, dict) # files, id_by_path, main_index, casefold_index unit_store
 
     def __init__(self,
                  root_dir: str,
@@ -50,22 +50,28 @@ class IndexWorker(QObject):
                 self.error.emit("No files found matching the selected extensions.")
                 return
 
+            files_by_id = {i: f for i, f in enumerate(valid_files)}
+            id_by_path = {f.path: i for i, f in files_by_id.items()}
+
             self.status.emit("Extracting text...")
-            # Capture the unit_store so we can show snippets later
-            unit_store = indexer.build_unit_store(valid_files, case_sensitive=False)
+            # Capture the unit_store, so we can show snippets later
+            unit_store = indexer.build_unit_store_incremental(files_by_id, case_sensitive=False)
 
             self.status.emit("Building search index...")
             index = indexer.build_index(
-                valid_files,
+                files_by_id,
                 unit_store=unit_store,
                 min_length=self.min_length,
                 stopwords=self.stopwords,
                 keep_numbers=self.keep_numbers
             )
 
+            self.status.emit("Optimizing index for search...")
+            casefold_index = indexer.build_casefold_index(index)
+
         except Exception as e:
             self.error.emit(f"Indexing Error: {e}")
             return
         else:
             # 2. Emit all three parts to the MainWindow
-            self.finished.emit(valid_files, index, unit_store)
+            self.finished.emit(files_by_id, id_by_path, index, casefold_index, unit_store)

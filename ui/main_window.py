@@ -34,8 +34,10 @@ class MainWindow(QMainWindow):
         # Data produced by indexing (None until "Build Index" finishes successfully).
         # - files: list of scanned files with metadata (path/size/mtime/type)
         # - index: inverted index token -> list[Hit]
-        self.files: list[FileRecord] | None = None
+        self.files_by_id: dict[int, FileRecord] | None = None
+        self.id_by_path: dict[str, int] | None = None
         self.index: dict[str, list[Hit]] | None = None
+        self.casefold_index: dict[str, list[Hit]] | None = None
         self.unit_store: dict[int, list[str]] | None = None
 
         """
@@ -203,6 +205,7 @@ class MainWindow(QMainWindow):
             QLineEdit:focus { 
                 border: 1px solid #3b82f6; 
                 background: #0f172a;
+                transition: border-color 0.2s;
             }
 
             /* List Items Selection */
@@ -251,12 +254,12 @@ class MainWindow(QMainWindow):
             /* Action-Specific Button: Search */
             QPushButton#searchButton {
                 background: #2563eb;
-                border: 1px solid #3b82f6;
-                color: white;
-                font-weight: 700;
+                font-weight: bold;
+                border-radius: 6px;
+                padding: 8px 20px;
             }
             QPushButton#searchButton:hover {
-                background: #1d4ed8;
+                background: #3b82f6;
             }
             QPushButton#searchButton:pressed {
                 background: #1e40af;
@@ -318,7 +321,7 @@ class MainWindow(QMainWindow):
             if len(explorer_dialog.selectedFiles()) > 0:
                 # Choosing a new folder invalidates the previous index/results.
                 self.path_edit.setText(explorer_dialog.selectedFiles()[0])
-                self.files = None
+                self.files_by_id = None
                 self.index = None
                 self.last_results = []
                 self.index_meta = None
@@ -369,7 +372,7 @@ class MainWindow(QMainWindow):
 
     def on_save_index_clicked(self) -> None:
         # Save the current index to disk (meta.json + index files).
-        if self.index is None or self.files is None:
+        if self.index is None or self.files_by_id is None:
             self.status_label.setText("No index to save")
             return
 
@@ -385,7 +388,8 @@ class MainWindow(QMainWindow):
                         raise NotADirectoryError("This path is not a directory path")
 
                     persist.save_index(
-                        files=self.files,
+                        files_by_id=self.files_by_id,
+                        id_by_path=self.id_by_path,
                         index=self.index,
                         out_dir=explorer_dialog.selectedFiles()[0],
                         meta=self.index_meta,
@@ -404,10 +408,11 @@ class MainWindow(QMainWindow):
 
         if dialog_success:
             if len(explorer_dialog.selectedFiles()) > 0:
-                files, index, meta = persist.load_index(explorer_dialog.selectedFiles()[0])
+                files_by_id, ids_by_path, index, meta = persist.load_index(explorer_dialog.selectedFiles()[0])
 
                 # Replace current in-memory index with the loaded one.
-                self.files = files
+                self.files_by_id = files_by_id
+                self.id_by_path = ids_by_path
                 self.index = index
                 self.index_meta = meta
 
@@ -416,12 +421,12 @@ class MainWindow(QMainWindow):
                 self.snippets_box.clear()
 
                 # Validate (basic safety check) and warn if something looks outdated.
-                is_valid, problems = persist.validate_index(files=files)
+                is_valid, problems = persist.validate_index(files_by_id=self.files_by_id)
                 if not is_valid:
                     self.status_label.setText("Index may be outdated")
                 else:
                     self.status_label.setText(
-                        f"The system scanned {len(files)} files and {len(index.keys())} tokens"
+                        f"The system scanned {len(files_by_id)} files and {len(index.keys())} tokens"
                     )
 
     def on_index_status(self, message: str) -> None:
@@ -439,11 +444,16 @@ class MainWindow(QMainWindow):
         self.browse_btn.setEnabled(True)
         self.build_btn.setEnabled(True)
 
-    def on_index_finished(self, files: list[FileRecord], index: dict[str, list[Hit]],
+    def on_index_finished(self, files: dict[int, FileRecord],
+                          id_by_path: dict[str, int],
+                          index: dict[str, list[Hit]],
+                          casefold_index: dict[str, list[Hit]],
                           unit_store: dict[int, list[str]]) -> None:
         # Worker finished successfully: store index and enable Save/Search.
-        self.files = files
+        self.files_by_id = files
+        self.id_by_path = id_by_path
         self.index = index
+        self.casefold_index = casefold_index
         self.unit_store = unit_store
 
         # Restore UI to "ready" state.
@@ -489,7 +499,7 @@ class MainWindow(QMainWindow):
 
         if self.token_and_radio_button.isChecked():
             # Execute query against the in-memory index and display ranked results.
-            if self.files is None or self.index is None:
+            if self.files_by_id is None or self.index is None:
                 self.status_label.setText("Build index first")
                 return
 
@@ -497,11 +507,12 @@ class MainWindow(QMainWindow):
                                                           case_sensitive=is_case_sensitive)
             self.update_token_legend(self.last_query_tokens)
             self.last_results = query.search_and(self.query_edit.text(), unit_store=self.unit_store,
-                                                 files=self.files, index=self.index,
+                                                 files=self.files_by_id, index=self.index,
+                                                 casefold_index=self.casefold_index,
                                                  case_sensitive=is_case_sensitive)
             self.last_search_mode = "and"
         elif self.token_contains_radio_button.isChecked():
-            if self.files is None:
+            if self.files_by_id is None:
                 self.status_label.setText("Select folder first")
                 return
 
@@ -510,7 +521,7 @@ class MainWindow(QMainWindow):
             self.update_token_legend(self.last_query_tokens)
             self.last_results = query.search_token_contains(self.query_edit.text(),
                                                             unit_store=self.unit_store,
-                                                            files=self.files,
+                                                            files=self.files_by_id,
                                                             case_sensitive=is_case_sensitive)
             self.last_search_mode = "contains"
         elif self.exact_radio_button.isChecked():
@@ -520,13 +531,13 @@ class MainWindow(QMainWindow):
 
             self.last_results = query.search_exact(self.query_edit.text(),
                                                    unit_store=self.unit_store,
-                                                   files=self.files,
+                                                   files=self.files_by_id,
                                                    case_sensitive=is_case_sensitive)
             self.legend_list.clear()
             self.last_query_tokens.clear()
             self.last_search_mode = "exact"
         elif self.regex_radio_button.isChecked():
-            if self.files is None:
+            if self.files_by_id is None:
                 self.status_label.setText("Select folder first")
                 return
 
@@ -534,7 +545,7 @@ class MainWindow(QMainWindow):
                 self.last_results = query.search_regex(
                     self.query_edit.text(),
                     unit_store=self.unit_store,
-                    files=self.files,
+                    files=self.files_by_id,
                     case_sensitive=is_case_sensitive
                 )
             except ValueError:
