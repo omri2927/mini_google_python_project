@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import QMainWindow, QLabel, QLineEdit, QPushButton, QProgre
     QAbstractItemView, QSizePolicy, QCheckBox
 from PyQt6.QtGui import QColor, QTextCursor, QTextCharFormat, QTextDocument, QPixmap, QIcon, QFont
 
-from core import query, persist
+from core import query, persist, indexer
 from core.models import FileRecord, Hit, SearchResult
 from ui.worker import IndexWorker
 
@@ -322,7 +322,10 @@ class MainWindow(QMainWindow):
                 # Choosing a new folder invalidates the previous index/results.
                 self.path_edit.setText(explorer_dialog.selectedFiles()[0])
                 self.files_by_id = None
+                self.id_by_path = None
                 self.index = None
+                self.casefold_index = None
+                self.unit_store = None
                 self.last_results = []
                 self.index_meta = None
                 self.results_list.clear()
@@ -414,6 +417,10 @@ class MainWindow(QMainWindow):
                 self.files_by_id = files_by_id
                 self.id_by_path = ids_by_path
                 self.index = index
+                self.casefold_index = indexer.build_casefold_index(index=self.index)
+                self.unit_store = indexer.build_unit_store_incremental(
+                                    files_to_process=self.files_by_id,
+                                    case_sensitive=self.case_sensitive_checkbox.isChecked())
                 self.index_meta = meta
 
                 self.search_btn.setEnabled(True)
@@ -525,7 +532,7 @@ class MainWindow(QMainWindow):
                                                             case_sensitive=is_case_sensitive)
             self.last_search_mode = "contains"
         elif self.exact_radio_button.isChecked():
-            if self.files is None:
+            if self.files_by_id is None:
                 self.status_label.setText("Select folder first")
                 return
 
@@ -842,7 +849,7 @@ class MainWindow(QMainWindow):
         while block.isValid():
             text = block.text().strip()
 
-            if text.startswith("Line"):
+            if text.startswith("Unit"):
                 selection = QTextEdit.ExtraSelection()
                 selection.format = highlight_format
 

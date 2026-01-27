@@ -1,5 +1,6 @@
 from PyQt6.QtCore import pyqtSignal, QObject
-from core import indexer
+
+from core import engine
 from core.models import FileRecord
 
 # Background worker responsible only for I/O-heavy and CPU-heavy indexing work.
@@ -42,32 +43,12 @@ class IndexWorker(QObject):
     def run(self) -> None:
         try:
             self.status.emit("Scanning...")
-            valid_files: list[FileRecord] = indexer.scan_files(
-                self.root_dir, self.extensions
-            )
-
-            if not valid_files:
-                self.error.emit("No files found matching the selected extensions.")
-                return
-
-            files_by_id = {i: f for i, f in enumerate(valid_files)}
-            id_by_path = {f.path: i for i, f in files_by_id.items()}
-
-            self.status.emit("Extracting text...")
-            # Capture the unit_store, so we can show snippets later
-            unit_store = indexer.build_unit_store_incremental(files_by_id, case_sensitive=False)
-
-            self.status.emit("Building search index...")
-            index = indexer.build_index(
-                files_by_id,
-                unit_store=unit_store,
-                min_length=self.min_length,
-                stopwords=self.stopwords,
-                keep_numbers=self.keep_numbers
-            )
-
-            self.status.emit("Optimizing index for search...")
-            casefold_index = indexer.build_casefold_index(index)
+            files_by_id, id_by_path, unit_store,\
+            index, casefold_index = engine.build_index_fresh(root_dir=self.root_dir,
+                                                             extensions=self.extensions,
+                                                             min_length=self.min_length,
+                                                             stopwords=self.stopwords,
+                                                             keep_numbers=self.keep_numbers)
 
         except Exception as e:
             self.error.emit(f"Indexing Error: {e}")
