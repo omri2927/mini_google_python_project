@@ -1,7 +1,7 @@
 from PyQt6.QtCore import pyqtSignal, QObject
 
-from core import engine
-from core.models import FileRecord
+from core import engine, indexer, persist
+from core.models import FileRecord, Hit
 
 # Background worker responsible only for I/O-heavy and CPU-heavy indexing work.
 # It runs in a QThread and communicates with the UI exclusively via signals.
@@ -56,3 +56,44 @@ class IndexWorker(QObject):
         else:
             # 2. Emit all three parts to the MainWindow
             self.finished.emit(files_by_id, id_by_path, index, casefold_index, unit_store)
+
+
+class PostLoadWorker(QObject):
+    status = pyqtSignal(str)
+
+    error = pyqtSignal(str)
+
+    finished = pyqtSignal(dict, dict, tuple)
+
+    def __init__(self,
+                 *,
+                 files_by_id: dict[int, FileRecord],
+                 index: dict[str, list[Hit]],
+                 case_sensitive: bool):
+        super().__init__()
+
+        self.files_by_id = files_by_id
+        self.index = index
+        self.case_sensitive = case_sensitive
+
+    def run(self) -> None:
+        try:
+            self.status.emit("Validating index...")
+
+            validation: tuple[bool, list[str]] = persist.validate_index(files_by_id=self.files_by_id)
+
+            self.status.emit("Preparing snippets...")
+
+            unit_store: dict[int, list[str]] = indexer.build_unit_store_incremental(
+                                                              files_to_process=self.files_by_id,
+                                                              case_sensitive=self.case_sensitive)
+
+            self.status.emit("Optimizing search...")
+
+            casefold_index: dict[str, list[Hit]] = indexer.build_casefold_index(index=self.index)
+
+        except Exception as e:
+            self.error.emit(f"Load preparation error: {e}")
+            return
+        else:
+            self.finished.emit(unit_store, casefold_index, validation)

@@ -93,7 +93,7 @@ def load_index(
 
     meta_dict: dict = {}
     all_file_records: dict[int, FileRecord] = dict()
-    ids_by_path: dict[str, int] = dict()
+    id_by_path: dict[str, int] = dict()
     index_dict: dict[str, list[Hit]] = {}
 
     try:
@@ -114,7 +114,7 @@ def load_index(
                 raise ValueError(f"Unknown file type in index: {f['filetype']}")
             all_file_records[f["id"]] = FileRecord(path=f["path"], size=f["size"], mtime=f["mtime"], filetype=filetype)
 
-        ids_by_path = meta_dict.get("id_by_path", {})
+        id_by_path = meta_dict.get("id_by_path", {})
 
         # Optional validation
         is_valid, problems = validate_index(files_by_id=all_file_records)
@@ -136,7 +136,7 @@ def load_index(
     except Exception as e:
         raise RuntimeError(f"An error occurred while loading index data: {e}") from e
 
-    return all_file_records, ids_by_path, index_dict, meta_dict
+    return all_file_records, id_by_path, index_dict, meta_dict
 
 
 # ------------------------------------------------------------

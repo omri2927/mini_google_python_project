@@ -11,9 +11,9 @@ from PyQt6.QtWidgets import QMainWindow, QLabel, QLineEdit, QPushButton, QProgre
     QAbstractItemView, QSizePolicy, QCheckBox
 from PyQt6.QtGui import QColor, QTextCursor, QTextCharFormat, QTextDocument, QPixmap, QIcon, QFont
 
-from core import query, persist, indexer
+from core import query, persist
 from core.models import FileRecord, Hit, SearchResult
-from ui.worker import IndexWorker
+from ui.worker import IndexWorker, PostLoadWorker
 
 # File extensions the UI allows the user to index/search.
 EXTENSIONS = [".txt", ".log", ".py", ".md", ".csv", ".json", ".xml"]
@@ -28,8 +28,11 @@ class MainWindow(QMainWindow):
 
         # Keep references to avoid garbage-collection while the background thread is running.
         # (If Python GC collects these, the worker/thread may stop unexpectedly.)
-        self.thread: QThread | None = None
-        self.worker: IndexWorker | None = None
+        self.main_thread: QThread | None = None
+        self.main_worker: IndexWorker | None = None
+
+        self.post_load_thread: QThread | None = None
+        self.post_load_worker: PostLoadWorker | None = None
 
         # Data produced by indexing (None until "Build Index" finishes successfully).
         # - files: list of scanned files with metadata (path/size/mtime/type)
@@ -353,25 +356,25 @@ class MainWindow(QMainWindow):
         self.status_label.setText("Starting...")
 
         # Create worker + thread. Worker does the heavy lifting; UI stays responsive.
-        self.thread = QThread()
-        self.worker = IndexWorker(self.path_edit.text(), EXTENSIONS)
+        self.main_thread = QThread()
+        self.main_worker = IndexWorker(self.path_edit.text(), EXTENSIONS)
 
         # Run the worker in a background thread; communicate back via signals.
-        self.worker.moveToThread(self.thread)
-        self.thread.started.connect(self.worker.run)
+        self.main_worker.moveToThread(self.main_thread)
+        self.main_thread.started.connect(self.main_worker.run)
 
         # Worker -> UI communication (always happens on the main thread).
-        self.worker.status.connect(self.on_index_status)
-        self.worker.error.connect(self.on_index_error)
-        self.worker.finished.connect(self.on_index_finished)
+        self.main_worker.status.connect(self.on_index_status)
+        self.main_worker.error.connect(self.on_index_error)
+        self.main_worker.finished.connect(self.on_index_finished)
 
         # Always stop and clean up the thread when work ends (success or error).
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.error.connect(self.thread.quit)
-        self.thread.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.thread.deleteLater)
+        self.main_worker.finished.connect(self.main_thread.quit)
+        self.main_worker.error.connect(self.main_thread.quit)
+        self.main_thread.finished.connect(self.main_worker.deleteLater)
+        self.main_thread.finished.connect(self.main_thread.deleteLater)
 
-        self.thread.start()
+        self.main_thread.start()
 
     def on_save_index_clicked(self) -> None:
         # Save the current index to disk (meta.json + index files).
@@ -411,30 +414,45 @@ class MainWindow(QMainWindow):
 
         if dialog_success:
             if len(explorer_dialog.selectedFiles()) > 0:
-                files_by_id, ids_by_path, index, meta = persist.load_index(explorer_dialog.selectedFiles()[0])
+                files_by_id, id_by_path, index, meta = persist.load_index(explorer_dialog.selectedFiles()[0])
 
                 # Replace current in-memory index with the loaded one.
                 self.files_by_id = files_by_id
-                self.id_by_path = ids_by_path
+                self.id_by_path = id_by_path
                 self.index = index
-                self.casefold_index = indexer.build_casefold_index(index=self.index)
-                self.unit_store = indexer.build_unit_store_incremental(
-                                    files_to_process=self.files_by_id,
-                                    case_sensitive=self.case_sensitive_checkbox.isChecked())
                 self.index_meta = meta
 
-                self.search_btn.setEnabled(True)
-                self.save_btn.setEnabled(True)
-                self.snippets_box.clear()
+                self.browse_btn.setEnabled(False)
+                self.build_btn.setEnabled(False)
+                self.save_btn.setEnabled(False)
+                self.load_btn.setEnabled(False)
+                self.search_btn.setEnabled(False)
+                self.case_sensitive_checkbox.setEnabled(False)
 
-                # Validate (basic safety check) and warn if something looks outdated.
-                is_valid, problems = persist.validate_index(files_by_id=self.files_by_id)
-                if not is_valid:
-                    self.status_label.setText("Index may be outdated")
-                else:
-                    self.status_label.setText(
-                        f"The system scanned {len(files_by_id)} files and {len(index.keys())} tokens"
-                    )
+                self.progress.show()
+                self.progress.setRange(0, 0)
+                self.progress.setFormat("Preparing...")
+
+                self.post_load_thread = QThread()
+                self.post_load_worker = PostLoadWorker(files_by_id=self.files_by_id, index=self.index,
+                                                       case_sensitive=self.case_sensitive_checkbox.isChecked())
+
+                self.post_load_worker.moveToThread(self.post_load_thread)
+                self.post_load_thread.started.connect(self.post_load_worker.run)
+
+                self.post_load_worker.status.connect(self.on_post_load_status)
+                self.post_load_worker.error.connect(self.on_post_load_error)
+                self.post_load_worker.finished.connect(self.on_post_load_finished)
+
+                self.post_load_worker.finished.connect(self.post_load_thread.quit)
+                self.post_load_worker.error.connect(self.post_load_thread.quit)
+
+                self.post_load_thread.finished.connect(self.post_load_worker.deleteLater)
+                self.post_load_thread.finished.connect(self.post_load_thread.deleteLater)
+
+                self.post_load_thread.start()
+
+                self.snippets_box.clear()
 
     def on_index_status(self, message: str) -> None:
         # Live status messages from the background worker.
@@ -489,6 +507,54 @@ class MainWindow(QMainWindow):
                 "keep_numbers": True,
             },
         }
+
+    def on_post_load_status(self, message: str) -> None:
+        # Live status messages from the background worker.
+        self.status_label.setText(message)
+
+    def on_post_load_error(self, message: str) -> None:
+        # Worker failed: restore UI so the user can try again.
+        self.status_label.setText(message)
+
+        self.progress.setRange(0, 100)
+        self.progress.setValue(100)
+        self.progress.hide()
+
+        self.browse_btn.setEnabled(True)
+        self.build_btn.setEnabled(True)
+        self.load_btn.setEnabled(True)
+        self.case_sensitive_checkbox.setEnabled(True)
+
+    def on_post_load_finished(self, unit_store: dict[int, list[str]],
+                              casefold_index: dict[str, list[Hit]],
+                              problems_data: tuple[bool, list[str]]) -> None:
+        # Worker finished successfully: store index and enable Save/Search.
+        self.unit_store = unit_store
+        self.casefold_index = casefold_index
+
+        # Restore UI to "ready" state.
+        self.progress.setRange(0, 100)
+        self.progress.setValue(100)
+        self.progress.hide()
+
+        self.browse_btn.setEnabled(True)
+        self.build_btn.setEnabled(True)
+        self.save_btn.setEnabled(True)
+        self.load_btn.setEnabled(True)
+        self.search_btn.setEnabled(True)
+        self.case_sensitive_checkbox.setEnabled(True)
+
+        files_count = len(self.files_by_id) if self.files_by_id else 0
+        tokens_count = len(self.index) if self.index else 0
+
+        self.snippets_box.clear()
+
+        # Validate (basic safety check) and warn if something looks outdated.
+        is_valid, problems = problems_data
+        if not is_valid:
+            self.status_label.setText(f"Index may be outdated: {len(problems)} issues")
+        else:
+            self.status_label.setText(f"Loaded {files_count} files and {tokens_count} tokens")
 
     def on_search_clicked(self) -> None:
         if self.query_edit.text() == "":
@@ -873,7 +939,7 @@ class MainWindow(QMainWindow):
         while block.isValid():
             line_text = block.text()
 
-            if line_text.strip().startswith("Line"):
+            if line_text.strip().startswith("Unit"):
                 block = block.next()
                 continue
             elif set(line_text.strip()) == {'-'}:
