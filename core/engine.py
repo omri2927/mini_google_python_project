@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from core.models import FileRecord, Hit
-from core import extractors, indexer
+from core import extractors, indexer, normalize
 
 def rebuild_index_incremental(
     *,
@@ -93,7 +93,11 @@ def build_index_fresh(
     index = indexer.build_index(files=files_by_id, unit_store=unit_store,
                                 min_length=min_length, stopwords=stopwords,
                                 keep_numbers=keep_numbers)
+
+    index = normalize.normalize_index(index=index)
+
     casefold_index = indexer.build_casefold_index(index=index)
+    casefold_index = normalize.normalize_index(index=casefold_index)
 
     return files_by_id, ids_by_path,\
            unit_store, index, casefold_index

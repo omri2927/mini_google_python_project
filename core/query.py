@@ -82,9 +82,11 @@ def search_and(
         for tok in query_tokens:
             # USE query_token_to_hits instead of index[tok]
             for h in query_token_to_hits[tok]:
-                if h.file_id == file_id and h.unit_index not in units_used:
-                    matches_count += 1
-                    units_used.add(h.unit_index)
+                if h.file_id == file_id:
+                    for idx in h.unit_index:
+                        if idx not in units_used:
+                            matches_count += 1
+                            units_used.add(idx)
 
         if case_sensitive:
             score = _tfidf_score_for_file(file_id=file_id, query_tokens=query_tokens,

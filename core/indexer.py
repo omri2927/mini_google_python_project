@@ -90,7 +90,7 @@ def build_index(
                 # Append the hit using the consistent file_id
                 index[token].append(Hit(
                     file_id=file_id,
-                    unit_index=unit_index,
+                    unit_index=[unit_index],
                     count=count
                 ))
 
@@ -180,7 +180,6 @@ def rebuild_index_incremental(
     old_files_by_id: dict[int, FileRecord],
     old_id_by_path: dict[str, int],
     old_unit_store: dict[int, list[str]],
-    old_index: dict[str, list[Hit]],
     new_scan_files: list[FileRecord],
     min_length: int = 2,
     stopwords: set[str] | None = None,
@@ -268,6 +267,6 @@ def add_file_to_index(
             # Append the new Hit record
             index[token].append(Hit(
                 file_id=file_id,
-                unit_index=unit_index,
+                unit_index=[unit_index],
                 count=count
             ))

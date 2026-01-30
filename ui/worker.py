@@ -1,6 +1,6 @@
 from PyQt6.QtCore import pyqtSignal, QObject
 
-from core import engine, indexer, persist
+from core import engine, indexer, persist, normalize
 from core.models import FileRecord, Hit
 
 # Background worker responsible only for I/O-heavy and CPU-heavy indexing work.
@@ -50,6 +50,9 @@ class IndexWorker(QObject):
                                                              stopwords=self.stopwords,
                                                              keep_numbers=self.keep_numbers)
 
+            index = normalize.normalize_index(index=index)
+            casefold_index = normalize.normalize_index(index=casefold_index)
+
         except Exception as e:
             self.error.emit(f"Indexing Error: {e}")
             return
@@ -91,6 +94,7 @@ class PostLoadWorker(QObject):
             self.status.emit("Optimizing search...")
 
             casefold_index: dict[str, list[Hit]] = indexer.build_casefold_index(index=self.index)
+            casefold_index = normalize.normalize_index(index=casefold_index)
 
         except Exception as e:
             self.error.emit(f"Load preparation error: {e}")

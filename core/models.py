@@ -22,7 +22,7 @@ class FileRecord(NamedTuple):
 class Hit(NamedTuple):
     # Represents a single match inside a file
     file_id: int
-    unit_index: int
+    unit_index: list[int]
     count: int
 
 @dataclass

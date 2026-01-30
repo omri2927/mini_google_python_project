@@ -61,12 +61,11 @@ def save_index(
             for token, hits in index.items():
                 token_entry = {
                     "token": token,
-                    "hits": {}
+                    "hits": {
+                        str(h.file_id): [h.unit_index, h.count]
+                        for h in hits
+                    }
                 }
-
-                for hit in hits:
-                    file_id = str(hit.file_id)
-                    token_entry["hits"].setdefault(file_id, []).append([hit.unit_index, hit.count])
 
                 index_file.write(json.dumps(token_entry, ensure_ascii=False) + "\n")
 
@@ -125,11 +124,10 @@ def load_index(
                 data = json.loads(line)
                 token = data["token"]
 
-                index_dict[token] = []
-                for file_id_str, hits_list in data.get("hits", {}).items():
-                    fid = int(file_id_str)
-                    index_dict[token].extend([Hit(fid, h[0], h[1]) for h in hits_list])
-
+                index_dict[token] = [
+                    Hit(file_id=int(fid_str), unit_index=val[0], count=val[1])
+                    for fid_str, val in data.get("hits", {}).items()
+                ]
 
     except json.JSONDecodeError:
         raise RuntimeError("Index file is corrupted or malformed JSON.")
